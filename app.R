@@ -54,8 +54,6 @@ map = leaflet() %>% addTiles() %>%
               title = "2M Temp",labFormat = 
                   labelFormat(transform = function(x) sort(x, decreasing = TRUE))) 
 
-
-
 ################################################################################
 
 ui <- fluidPage(
@@ -64,6 +62,7 @@ ui <- fluidPage(
         sidebarPanel(
             selectInput("yearInput", "Year", choices = 1996:1998, selected = "2007"),
             selectInput("varInput", "Variables", choices = varNamesLong, selected = varNamesLong[1])),
+            #sliderInpout("dateInput", "Date",)
         mainPanel(
             leafletOutput("myMap", width = "900", height = "650"),
             br(),br()
@@ -71,7 +70,7 @@ ui <- fluidPage(
     )
 )
 
-server = function(input, output) {
+server = function(input, output, session) {
     
     output$myMap <- renderLeaflet(map)
     
@@ -83,7 +82,7 @@ server = function(input, output) {
     rast1 <- reactive ({ setExtent(rast(), extent(plonlat)) })
     
     #Project to the leaflet lat/long grid and visualize
-    rast2 <- reactive ({ projectRasterForLeaflet(rast1()[[5]], method = "bilinear") })
+    rast2 <- reactive ({ projectRasterForLeaflet(rast1()[[1]], method = "bilinear") })
     
     # set color palette
     color_pal <- reactive ({ colorNumeric(c("dark red", "light blue", "dark green"), values(rast2()),
@@ -101,6 +100,7 @@ server = function(input, output) {
                       title = "2M Temp",labFormat = 
                           labelFormat(transform = function(x) sort(x, decreasing = TRUE)))
     })
+    session$onSessionEnded(stopApp)
 }
 
 shinyApp(ui, server)
