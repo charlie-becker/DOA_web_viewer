@@ -37,14 +37,24 @@ projection(init_rast) <- myCRS
 extent(init_rast) <- extent(plonlat)
 
 # Project to the leaflet lat/long grid and visualize
-#r <- projectRasterForLeaflet(init_rast, method = "bilinear")
+r <- projectRasterForLeaflet(init_rast, method = "bilinear")
 
 # set color palette
-#color_pal <- colorNumeric(c("dark red", "light blue", "dark green"), values(r),
-#                         na.color = "transparent")
+color_pal <- colorNumeric(c("dark red", "light blue", "dark green"), values(r),
+                          na.color = "transparent")
 
-#rev_color_pal <- colorNumeric(rev(c("dark red", "light blue", "dark green")), values(r),
-#                             na.color = "transparent")
+rev_color_pal <- colorNumeric(rev(c("dark red", "light blue", "dark green")), values(r),
+                              na.color = "transparent")
+
+map = leaflet() %>% addTiles() %>%
+    setView(lng = -116.5, lat = 43.8 ,zoom = 8) %>%
+    addGeoJSON(json, weight = .5, color = "black", fill = F, opacity = 1) %>%
+    addRasterImage(r, colors = rev_color_pal, opacity = .7) %>%
+    addLegend(pal = color_pal, values = values(r),
+              title = "2M Temp",labFormat = 
+                  labelFormat(transform = function(x) sort(x, decreasing = TRUE))) 
+
+
 
 ################################################################################
 
@@ -63,6 +73,8 @@ ui <- fluidPage(
 
 server = function(input, output) {
     
+    output$myMap <- renderLeaflet(map)
+    
     v <- reactive ({ ncVarNames[match(input$varInput, varNamesLong)] })
     
     rast <- reactive ({ brick(paste0("./AVA_WY",input$yearInput, "_yearly_stats.nc"), varname = v(),
@@ -80,23 +92,16 @@ server = function(input, output) {
     rev_color_pal <- reactive ({ colorNumeric(rev(c("dark red", "light blue", "dark green")), values(rast2()),
                                               na.color = "transparent") })
     
-    map <- reactive ({ leaflet() %>% addTiles() %>%
-            setView(lng = -116.5, lat = 43.8 ,zoom = 8) %>%
-            addGeoJSON(json, weight = .5, color = "black", fill = F, opacity = 1) %>%
-            addRasterImage(rast2(), colors = rev_color_pal(), opacity = .7) %>%
+    observe({
+        leafletProxy("myMap", data = rast2()) %>%
+            clearImages() %>%
+            clearControls() %>%
+            addRasterImage(rast2(),colors = rev_color_pal(), opacity = .7) %>%
             addLegend(pal = color_pal(), values = values(rast2()),
                       title = "2M Temp",labFormat = 
-                          labelFormat(transform = function(x) sort(x, decreasing = TRUE))) })
-    output$myMap <- renderLeaflet(map())
-    
-    #observeEvent(input$myMap_shape_mousever$id, {
-    #pointId <- input$myMap_shape_mouseover$id
-    #x <- longLat@coords[,1]
-    #y <- longLat@coords[,2]
-    #leafletProxy("myMap") %>% addPopups(r,lng = x, lat = y, as.character(pointId))})
+                          labelFormat(transform = function(x) sort(x, decreasing = TRUE)))
+    })
 }
 
 shinyApp(ui, server)
-
-# added line to test version control (first modeified commit)
 
