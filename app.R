@@ -61,8 +61,8 @@ ui <- fluidPage(
     sidebarLayout(
         sidebarPanel(
             selectInput("yearInput", "Year", choices = 1996:1998, selected = "2007"),
-            selectInput("varInput", "Variables", choices = varNamesLong, selected = varNamesLong[1])),
-            #sliderInpout("dateInput", "Date",)
+            selectInput("varInput", "Variables", choices = varNamesLong, selected = varNamesLong[1]),
+            sliderInput("dateInput", "Days of Water Year", min = 1, max = 365, value = c(1,10))),
         mainPanel(
             leafletOutput("myMap", width = "900", height = "650"),
             br(),br()
@@ -82,7 +82,7 @@ server = function(input, output, session) {
     rast1 <- reactive ({ setExtent(rast(), extent(plonlat)) })
     
     #Project to the leaflet lat/long grid and visualize
-    rast2 <- reactive ({ projectRasterForLeaflet(rast1()[[1]], method = "bilinear") })
+    rast2 <- reactive ({ projectRasterForLeaflet(sum(rast1()[[input$dateInput[1]:input$dateInput[2]]]), method = "bilinear") })
     
     # set color palette
     color_pal <- reactive ({ colorNumeric(c("dark red", "light blue", "dark green"), values(rast2()),
