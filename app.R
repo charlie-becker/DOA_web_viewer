@@ -48,6 +48,7 @@ rev_color_pal <- colorNumeric(rev(c("dark red", "light blue", "dark green")), va
 
 map = leaflet() %>% addTiles() %>%
     setView(lng = -116.5, lat = 43.8 ,zoom = 8) %>%
+    addMarkers(lat = 43.5885, lng = -116.7932, label = "Sunnyslope") %>%
     addGeoJSON(json, weight = .5, color = "black", fill = F, opacity = 1) %>%
     addRasterImage(r, colors = rev_color_pal, opacity = .7) %>%
     addLegend(pal = color_pal, values = values(r),
