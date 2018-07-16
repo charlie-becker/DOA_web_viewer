@@ -60,6 +60,7 @@ ui <- fluidPage(
     titlePanel("Snake River Valley American Viticultural Area"),
     sidebarLayout(
         sidebarPanel(
+            radioButtons("domainInput", "Domain", choices = c("Snake River AVA", "Domain 02"), selected = "Snake River AVA"),
             selectInput("yearInput", "Year", choices = 1996:1998, selected = "2007"),
             selectInput("varInput", "Variables", choices = varNamesLong, selected = varNamesLong[1]),
             sliderInput("dateInput", "Days of Water Year", min = 1, max = 365, value = c(1,10))),
@@ -76,8 +77,14 @@ server = function(input, output, session) {
     
     v <- reactive ({ ncVarNames[match(input$varInput, varNamesLong)] })
     
-    rast <- reactive ({ brick(paste0("./AVA_WY",input$yearInput, "_yearly_stats.nc"), varname = v(),
-                              crs = "+proj=lcc +lat_1=44.299999f +lat_2=44.99999f +lat_0=44.300003 +lon_0=-114.7 +x_0=0 +y_0=0 +units=m +datum=WGS84 +no_defs") })
+    rast <- reactive ({ 
+        if (input$domainInput == "Snake River AVA") { 
+            brick(paste0("./AVA_WY",input$yearInput, "_yearly_stats.nc"), varname = v(),
+                              crs = "+proj=lcc +lat_1=44.299999f +lat_2=44.99999f +lat_0=44.300003 +lon_0=-114.7 +x_0=0 +y_0=0 +units=m +datum=WGS84 +no_defs") }
+    
+        else if (input$domainInput == "Domain 02") { 
+            brick(paste0("./WY",input$yearInput, "_yearly_stats.nc"), varname = v(),
+                              crs = "+proj=lcc +lat_1=44.299999f +lat_2=44.99999f +lat_0=44.300003 +lon_0=-114.7 +x_0=0 +y_0=0 +units=m +datum=WGS84 +no_defs") }})
     
     rast1 <- reactive ({ setExtent(rast(), extent(plonlat)) })
     
