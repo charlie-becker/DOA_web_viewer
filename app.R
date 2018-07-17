@@ -48,7 +48,7 @@ rev_color_pal <- colorNumeric(rev(c("dark red", "light blue", "dark green")), va
 
 map = leaflet() %>% addTiles() %>%
     setView(lng = -116.5, lat = 43.8 ,zoom = 8) %>%
-    addMarkers(lat = 43.5885, lng = -116.7932, label = "Sunnyslope") %>%
+    addMarkers(lat = 43.5885, lng = -116.7932, label = as.character(round(r[221,79],4))) %>%
     addGeoJSON(json, weight = .5, color = "black", fill = F, opacity = 1) %>%
     addRasterImage(r, colors = rev_color_pal, opacity = .7) %>%
     addLegend(pal = color_pal, values = values(r),
@@ -61,10 +61,11 @@ ui <- fluidPage(
     titlePanel("Snake River Valley American Viticultural Area"),
     sidebarLayout(
         sidebarPanel(
-            radioButtons("domainInput", "Domain", choices = c("Snake River AVA", "Domain 02"), selected = "Snake River AVA"),
+            radioButtons("domainInput", "Domain", choices = c("Snake River AVA (1km resolution)", "Domain 02 (1km resolution)", "Domain 01 (3km resolution)"), selected = "Snake River AVA (1km resolution)"),
             selectInput("yearInput", "Year", choices = 1996:1998, selected = "2007"),
             selectInput("varInput", "Variables", choices = varNamesLong, selected = varNamesLong[1]),
-            sliderInput("dateInput", "Days of Water Year", min = 1, max = 365, value = c(1,10))),
+            sliderInput("dateInput", "Days of Water Year", min = 1, max = 365, value = c(1,10)),
+        sliderInput("dateInput1", "Days of Water Year", min = as.Date("2007-10-01"), max = as.Date("2008-09-30"), value = c(as.Date("2007-10-01"),as.Date("2007-10-31")))),
         mainPanel(
             leafletOutput("myMap", width = "900", height = "650"),
             br(),br()
@@ -79,11 +80,11 @@ server = function(input, output, session) {
     v <- reactive ({ ncVarNames[match(input$varInput, varNamesLong)] })
     
     rast <- reactive ({ 
-        if (input$domainInput == "Snake River AVA") { 
+        if (input$domainInput == "Snake River AVA (1km resolution)") { 
             brick(paste0("./AVA_WY",input$yearInput, "_yearly_stats.nc"), varname = v(),
                               crs = "+proj=lcc +lat_1=44.299999f +lat_2=44.99999f +lat_0=44.300003 +lon_0=-114.7 +x_0=0 +y_0=0 +units=m +datum=WGS84 +no_defs") }
     
-        else if (input$domainInput == "Domain 02") { 
+        else if (input$domainInput == "Domain 02 (1km resolution)") { 
             brick(paste0("./WY",input$yearInput, "_yearly_stats.nc"), varname = v(),
                               crs = "+proj=lcc +lat_1=44.299999f +lat_2=44.99999f +lat_0=44.300003 +lon_0=-114.7 +x_0=0 +y_0=0 +units=m +datum=WGS84 +no_defs") }})
     
@@ -91,7 +92,6 @@ server = function(input, output, session) {
     
     #Project to the leaflet lat/long grid and visualize
     rast2 <- reactive ({ projectRasterForLeaflet(sum(rast1()[[input$dateInput[1]:input$dateInput[2]]]), method = "bilinear") })
-    
     # set color palette
     color_pal <- reactive ({ colorNumeric(c("dark red", "light blue", "dark green"), values(rast2()),
                                           na.color = "transparent") })
@@ -104,6 +104,7 @@ server = function(input, output, session) {
             clearImages() %>%
             clearControls() %>%
             addRasterImage(rast2(),colors = rev_color_pal(), opacity = .7) %>%
+            addMarkers(lat = 43.5885, lng = -116.7932, label = as.character(round(rast2()[221,79],4))) %>%
             addLegend(pal = color_pal(), values = values(rast2()),
                       title = "2M Temp",labFormat = 
                           labelFormat(transform = function(x) sort(x, decreasing = TRUE)))
