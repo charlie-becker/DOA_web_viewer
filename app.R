@@ -91,7 +91,14 @@ server = function(input, output, session) {
     rast1 <- reactive ({ setExtent(rast(), extent(plonlat)) })
     
     #Project to the leaflet lat/long grid and visualize
-    rast2 <- reactive ({ projectRasterForLeaflet(sum(rast1()[[input$dateInput[1]:input$dateInput[2]]]), method = "bilinear") })
+    rast2 <- reactive ({ 
+        if ((input$varInput %in% varNamesLong[1:3]) == TRUE) {
+            
+            projectRasterForLeaflet(mean(rast1()[[input$dateInput[1]:input$dateInput[2]]]), method = "bilinear") }
+        else {
+            
+            projectRasterForLeaflet(sum(rast1()[[input$dateInput[1]:input$dateInput[2]]]), method = "bilinear") }})
+    
     # set color palette
     color_pal <- reactive ({ colorNumeric(c("dark red", "light blue", "dark green"), values(rast2()),
                                           na.color = "transparent") })
@@ -104,7 +111,7 @@ server = function(input, output, session) {
             clearImages() %>%
             clearControls() %>%
             addRasterImage(rast2(),colors = rev_color_pal(), opacity = .7) %>%
-            addMarkers(lat = 43.5885, lng = -116.7932, label = as.character(round(rast2()[221,79],4))) %>%
+            addMarkers(lat = 43.5885, lng = -116.7932, label = as.character(round(rast2()[221,79],2))) %>%
             addLegend(pal = color_pal(), values = values(rast2()),
                       title = "2M Temp",labFormat = 
                           labelFormat(transform = function(x) sort(x, decreasing = TRUE)))
