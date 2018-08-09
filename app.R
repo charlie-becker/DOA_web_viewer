@@ -5,6 +5,8 @@ library(raster)
 library(rjson)
 library(sp)
 
+source("buttonIndicator.R")
+
 setwd("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/")
 
 # get netCDF data
@@ -54,6 +56,8 @@ map = leaflet() %>% addTiles() %>%
 ################################################################################
 
 ui <- fluidPage(
+    useShinyjs(),
+    tags$style(appCSS),
     titlePanel("Snake River Valley American Viticultural Area"),
     sidebarLayout(
         sidebarPanel(
@@ -62,7 +66,7 @@ ui <- fluidPage(
             selectInput("varInput", "Variables", choices = varNamesLong, selected = varNamesLong[1]),
             sliderInput("dateInput", "Days of Water Year", min = 1, max = 365, value = c(1,10)),
             sliderInput("dateInput1", "Days of Water Year", min = as.Date("2007-10-01"), max = as.Date("2008-09-30"), value = c(as.Date("2007-10-01"),as.Date("2007-10-31"))),
-            actionButton("button", "Create Map")),
+            withBusyIndicatorUI(actionButton("button", "Create Map", class = "btn-primary"))),
         mainPanel(
             leafletOutput("myMap", width = "900", height = "650"),
             br(),br()
@@ -115,6 +119,7 @@ server = function(input, output, session) {
     
     # create proxy leaflet map (from original map) 
     observeEvent(input$button, {
+        withBusyIndicatorServer("button", { 
         leafletProxy("myMap", data = rast2()) %>%
             clearImages() %>%
             clearControls() %>%
@@ -122,7 +127,7 @@ server = function(input, output, session) {
             addMarkers(lat = 43.5885, lng = -116.7932, label = as.character(round(rast2()[221,79],2))) %>%
             addLegend(pal = color_pal(), values = values(rast2()),
                       title = "2M Temp",labFormat = 
-                          labelFormat(transform = function(x) sort(x, decreasing = TRUE)))
+                          labelFormat(transform = function(x) sort(x, decreasing = TRUE)))})
     })
     
     # Kill the app when closed in the browser 
