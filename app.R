@@ -7,13 +7,16 @@ library(sp)
 
 source("buttonIndicator.R")
 
-setwd("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/")
+setwd("/Users/charlesbecker/Desktop/Data/30YR_Daily/Data/")
 
 # get netCDF data
 ncFileNames <- list.files(pattern = ".nc")
 
+# initial raster
+init_raster <- "AVA_WY1988_yearly_stats_d02.nc"
+
 # get AVA Shape File
-jsonFile <- "SR_AVA_simplified_pointRemove50m.json"
+jsonFile <- "/Users/charlesbecker/Desktop/Data/Project Data/Shiny/SR_AVA_simplified_pointRemove50m.json"
 
 # set variable names to pull from file and variable names to list on UI
 ncVarNames <- c("TMAX", "TMIN", "TMEAN", "GDD", "DPRCP", "DSNOW", "FROSTD", "FROSTH")
@@ -28,7 +31,7 @@ myCRS <- CRS("+proj=lcc +lat_1=44.299999f +lat_2=44.99999f +lat_0=44.300003 +lon
 myExtent <- c(-247739.5, 100260.5, -185023.9, 141976.1)
 
 # Load raster and set projection and lat/lon extent
-init_rast <- brick(ncFileNames[1], varname="GDD") 
+init_rast <- brick(init_raster, varname="GDD") 
 projection(init_rast) <- myCRS
 extent(init_rast) <- myExtent
 
@@ -50,7 +53,7 @@ map = leaflet() %>% addTiles() %>%
     addGeoJSON(json, weight = .5, color = "black", fill = F, opacity = 1) %>%
     addRasterImage(r, colors = rev_color_pal, opacity = .7) %>%
     addLegend(pal = color_pal, values = values(r),
-              title = "2M Temp",labFormat = 
+              title = "GDD",labFormat = 
                   labelFormat(transform = function(x) sort(x, decreasing = TRUE))) 
 
 ################################################################################
@@ -62,7 +65,7 @@ ui <- fluidPage(
     sidebarLayout(
         sidebarPanel(
             radioButtons("domainInput", "Domain", choices = c("Snake River AVA (1km resolution)", "Domain 02 (1km resolution)", "Domain 01 (3km resolution)"), selected = "Snake River AVA (1km resolution)"),
-            selectInput("yearInput", "Year", choices = 1988:1992, selected = "1988"),
+            selectInput("yearInput", "Year", choices = 1988:2017, selected = "1988"),
             selectInput("varInput", "Variables", choices = varNamesLong, selected = varNamesLong[1]),
             sliderInput("dateInput", "Days of Water Year", min = 1, max = 365, value = c(1,10)),
             sliderInput("dateInput1", "Days of Water Year", min = as.Date("2007-10-01"), max = as.Date("2008-09-30"), value = c(as.Date("2007-10-01"),as.Date("2007-10-31"))),
@@ -126,7 +129,7 @@ server = function(input, output, session) {
             addRasterImage(rast2(),colors = rev_color_pal(), opacity = .7) %>%
             addMarkers(lat = 43.5885, lng = -116.7932, label = as.character(round(rast2()[221,79],2))) %>%
             addLegend(pal = color_pal(), values = values(rast2()),
-                      title = "2M Temp",labFormat = 
+                      title = v(), labFormat = 
                           labelFormat(transform = function(x) sort(x, decreasing = TRUE)))})
     })
     
