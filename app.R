@@ -76,11 +76,11 @@ ui <- fluidPage(
                 #sliderInput("dateInput1", "Days of Water Year", min = as.Date("2007-10-01"), max = as.Date("2008-09-30"), value = c(as.Date("2007-10-01"),as.Date("2007-10-31")))),
             conditionalPanel(
                 condition = "input.plotInput == 'Yearly Anomaly'",
-                selectInput("yearInput", "Year", choices = 1988:2017, selected = "1988"),
+                selectInput("yearInput1", "Year", choices = 1988:2017, selected = "1988"),
                 selectInput("varInput", "Variables", choices = varNamesLong, selected = varNamesLong[1])),
             conditionalPanel(
                 condition = "input.plotInput == 'Monthly Anomaly'",
-                selectInput("yearInput", "Year", choices = 1988:2017, selected = "1988"),
+                selectInput("yearInput2", "Year", choices = 1988:2017, selected = "1988"),
                 selectInput("monInput","Month", choices = mon),
                 selectInput("varInput", "Variables", choices = varNamesLong, selected = varNamesLong[1])),
             withBusyIndicatorUI(actionButton("button", "Create Map", class = "btn-primary"))),
@@ -100,32 +100,48 @@ server = function(input, output, session) {
     
     # get variable name to pull from data from user selection
     v <- reactive ({ ncVarNames[match(input$varInput, varNamesLong)] })
-    
+
     # conditionals to determine which file to load 
     rast <- eventReactive(input$button, { 
-        if (input$domainInput == "Snake River AVA (1km resolution)") { 
-            brick(paste0("./AVA_WY",input$yearInput, "_yearly_stats_d02.nc"), varname = v(),
-                  crs = myCRS) }
-        
-        else if (input$domainInput == "Domain 02 (1km resolution)") { 
-            brick(paste0("./WY",input$yearInput, "_yearly_stats_d02.nc"), varname = v(),
-                  crs = myCRS) }
-        else if (input$domainInput == "Domain 01 (3km resolution)") { 
-            brick(paste0("./WY",input$yearInput, "_yearly_stats_d01.nc"), varname = v(),
-                  crs = myCRS) }})
+        if (input$plotInput == "Historical") {
+            if (input$domainInput == "Snake River AVA (1km resolution)") { 
+                brick(paste0("./AVA_WY",input$yearInput, "_yearly_stats_d02.nc"), varname = v(),
+                      crs = myCRS) }
+            else if (input$domainInput == "Domain 02 (1km resolution)") { 
+                brick(paste0("./WY",input$yearInput, "_yearly_stats_d02.nc"), varname = v(),
+                      crs = myCRS) }
+            else if (input$domainInput == "Domain 01 (3km resolution)") { 
+                brick(paste0("./WY",input$yearInput, "_yearly_stats_d01.nc"), varname = v(),
+                      crs = myCRS) }}
+        else if (input$plotInput == "Yearly Anomaly") {
+            if (input$domainInput == "Snake River AVA (1km resolution)") { 
+                brick("./AVA_Yearly_Anomalies_d02.nc", varname = v(),
+                      crs = myCRS) }
+            else if (input$domainInput == "Domain 02 (1km resolution)") { 
+                brick("./Yearly_Anomalies_d02.nc", varname = v(),
+                      crs = myCRS) }
+        }}
+        )
     
     # set the extent of loaded file for proper projection
     rast1 <- eventReactive(input$button, { setExtent(rast(), myExtent) })
     
     # project to the leaflet lat/long grid 
     rast2 <- eventReactive(input$button, { 
-        if ((input$varInput %in% varNamesLong[1:3]) == TRUE) {
-            
-            projectRasterForLeaflet(mean(rast1()[[input$dateInput[1]:input$dateInput[2]]], na.rm = T), method = "bilinear") }
-        else {
-            
-            projectRasterForLeaflet(sum(rast1()[[input$dateInput[1]:input$dateInput[2]]]), method = "bilinear") }})
-    
+        
+        if (input$plotInput == "Historical") {
+        
+            if ((input$varInput %in% varNamesLong[1:3]) == TRUE) {
+                
+                projectRasterForLeaflet(mean(rast1()[[input$dateInput[1]:input$dateInput[2]]], na.rm = T), method = "bilinear") }
+            else {
+                projectRasterForLeaflet(sum(rast1()[[input$dateInput[1]:input$dateInput[2]]]), method = "bilinear") }}
+        
+        else if (input$plotInput == "Yearly Anomaly") {
+           # ttt <- reactive(input$yearInput)
+            projectRasterForLeaflet(rast1()[[as.integer(input$yearInput1)-1987]]-rast1()[[31]], method = "bilinear")
+        }})
+    #input$yearInput - 1987
     # set color palette
     color_pal <- eventReactive(input$button, { colorNumeric(c("dark red", "light blue", "dark green"), values(rast2()),
                                           na.color = "transparent") })
@@ -133,6 +149,8 @@ server = function(input, output, session) {
     # reverse color palette
     rev_color_pal <- eventReactive(input$button, { colorNumeric(rev(c("dark red", "light blue", "dark green")), values(rast2()),
                                               na.color = "transparent") })
+    
+    
     
     # create proxy leaflet map (from original map) 
     observeEvent(input$button, {
