@@ -68,21 +68,20 @@ ui <- fluidPage(
         sidebarPanel(
             radioButtons("domainInput", "Domain", choices = c("Snake River AVA (1km resolution)", "Domain 02 (1km resolution)", "Domain 01 (3km resolution)"), selected = "Snake River AVA (1km resolution)"),
             radioButtons("plotInput", "Plot", choices = c("Historical","Yearly Anomaly", "Monthly Anomaly"), selected = "Historical"),
+            selectInput("varInput", "Variables", choices = varNamesLong, selected = varNamesLong[1]),
+            selectInput("yearInput", "Year", choices = 1988:2017, selected = "1988"),
             conditionalPanel(
                 condition = "input.plotInput == 'Historical'",
-                selectInput("yearInput", "Year", choices = 1988:2017, selected = "1988"),
-                selectInput("varInput", "Variables", choices = varNamesLong, selected = varNamesLong[1]),
                 sliderInput("dateInput", "Days of Water Year", min = 1, max = 365, value = c(1,10))),
                 #sliderInput("dateInput1", "Days of Water Year", min = as.Date("2007-10-01"), max = as.Date("2008-09-30"), value = c(as.Date("2007-10-01"),as.Date("2007-10-31")))),
-            conditionalPanel(
-                condition = "input.plotInput == 'Yearly Anomaly'",
-                selectInput("yearInput1", "Year", choices = 1988:2017, selected = "1988"),
-                selectInput("varInput", "Variables", choices = varNamesLong, selected = varNamesLong[1])),
+            #conditionalPanel(
+             #   condition = "input.plotInput == 'Yearly Anomaly'",
+              #  selectInput("yearInput1", "Year", choices = 1988:2017, selected = "1988"),
+               # selectInput("varInput", "Variables", choices = varNamesLong, selected = varNamesLong[1])),
             conditionalPanel(
                 condition = "input.plotInput == 'Monthly Anomaly'",
-                selectInput("yearInput2", "Year", choices = 1988:2017, selected = "1988"),
-                selectInput("monInput","Month", choices = mon),
-                selectInput("varInput", "Variables", choices = varNamesLong, selected = varNamesLong[1])),
+                selectInput("monInput","Month", choices = mon)),
+                #selectInput("varInput", "Variables", choices = varNamesLong, selected = varNamesLong[1])),
             withBusyIndicatorUI(actionButton("button", "Create Map", class = "btn-primary"))),
         mainPanel(
             leafletOutput("myMap", width = "900", height = "650"),
@@ -139,7 +138,7 @@ server = function(input, output, session) {
         
         else if (input$plotInput == "Yearly Anomaly") {
            # ttt <- reactive(input$yearInput)
-            projectRasterForLeaflet(rast1()[[as.integer(input$yearInput1)-1987]]-rast1()[[31]], method = "bilinear")
+            projectRasterForLeaflet(rast1()[[as.integer(input$yearInput)-1987]]-rast1()[[31]], method = "bilinear")
         }})
     #input$yearInput - 1987
     # set color palette
