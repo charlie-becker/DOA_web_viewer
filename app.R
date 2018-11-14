@@ -9,7 +9,7 @@ source("buttonIndicator.R")
 
 setwd("/Users/charlesbecker/Desktop/Data/30YR_Daily/Data/")
 
-mon = c("January","February","March","April","May","June","July","August","September","October","Novermber","December")
+monNames = c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
 
 # get netCDF data
 ncFileNames <- list.files(pattern = ".nc")
@@ -60,7 +60,8 @@ map = leaflet() %>% addTiles() %>%
 
 ################################################################################
 
-ui <- fluidPage(
+ui <- navbarPage("SRAVA",
+        tabPanel("Explorer",             
     useShinyjs(),
     tags$style(appCSS),
     titlePanel("Snake River Valley American Viticultural Area"),
@@ -73,21 +74,18 @@ ui <- fluidPage(
             conditionalPanel(
                 condition = "input.plotInput == 'Historical'",
                 sliderInput("dateInput", "Days of Water Year", min = 1, max = 365, value = c(1,10))),
-                #sliderInput("dateInput1", "Days of Water Year", min = as.Date("2007-10-01"), max = as.Date("2008-09-30"), value = c(as.Date("2007-10-01"),as.Date("2007-10-31")))),
-            #conditionalPanel(
-             #   condition = "input.plotInput == 'Yearly Anomaly'",
-              #  selectInput("yearInput1", "Year", choices = 1988:2017, selected = "1988"),
-               # selectInput("varInput", "Variables", choices = varNamesLong, selected = varNamesLong[1])),
             conditionalPanel(
                 condition = "input.plotInput == 'Monthly Anomaly'",
-                selectInput("monInput","Month", choices = mon)),
-                #selectInput("varInput", "Variables", choices = varNamesLong, selected = varNamesLong[1])),
+                selectInput("monInput","Month", choices = monNames)),
             withBusyIndicatorUI(actionButton("button", "Create Map", class = "btn-primary"))),
         mainPanel(
             leafletOutput("myMap", width = "900", height = "650"),
             br(),br()
-        )
-    )
+        ))),
+        tabPanel("TimeSeries"),
+        tabPanel("Stats"),
+        tabPanel("Background")
+    
 )
 
 ################################################################################
@@ -99,7 +97,7 @@ server = function(input, output, session) {
     
     # get variable name to pull from data from user selection
     v <- reactive ({ ncVarNames[match(input$varInput, varNamesLong)] })
-
+   # m <- reactive ({ monNames[match(input$monInput, monNames)] })
     # conditionals to determine which file to load 
     rast <- eventReactive(input$button, { 
         if (input$plotInput == "Historical") {
@@ -118,6 +116,13 @@ server = function(input, output, session) {
                       crs = myCRS) }
             else if (input$domainInput == "Domain 02 (1km resolution)") { 
                 brick("./Yearly_Anomalies_d02.nc", varname = v(),
+                      crs = myCRS) }}
+        else if (input$plotInput == "Monthly Anomaly") {
+            if (input$domainInput == "Snake River AVA (1km resolution)") { 
+                brick(paste0("./", input$monInput, "_AVA_Anomalies_d02.nc"), varname = v(),
+                      crs = myCRS) }
+            else if (input$domainInput == "Domain 02 (1km resolution)") { 
+                brick(paste0("./", input$monInput, "_Anomalies_d02.nc"), varname = v(),
                       crs = myCRS) }
         }}
         )
@@ -136,10 +141,10 @@ server = function(input, output, session) {
             else {
                 projectRasterForLeaflet(sum(rast1()[[input$dateInput[1]:input$dateInput[2]]]), method = "bilinear") }}
         
-        else if (input$plotInput == "Yearly Anomaly") {
-           # ttt <- reactive(input$yearInput)
+        else if (input$plotInput == "Yearly Anomaly" || input$plotInput == "Monthly Anomaly") {
+            
             projectRasterForLeaflet(rast1()[[as.integer(input$yearInput)-1987]]-rast1()[[31]], method = "bilinear")
-        }})
+     }})
     #input$yearInput - 1987
     # set color palette
     color_pal <- eventReactive(input$button, { colorNumeric(c("dark red", "light blue", "dark green"), values(rast2()),
