@@ -80,13 +80,36 @@ map = leaflet() %>% addTiles() %>%
               title = "GDD",labFormat = 
                   labelFormat(transform = function(x) sort(x, decreasing = TRUE))) 
 
+
 ################################################################################
 
-ui <- navbarPage("SRAVA",
+ui <- navbarPage("",
+        tabPanel("Home",
+            tags$head(
+                tags$link(rel = "stylesheet", type = "text/css", href = "test1.css")
+            ),
+            setBackgroundColor("white"),
+            img(src="test_vine.jpg", class = "imgcon"),
+            div(class = "text-block",
+            h1("Snake River Valley AVA"),
+            h1("Climate Explorer")),
+            h2("The Snake River Valley American Viticulture Area Climate Explore is an interactive tool to visualize 30 years of high resolution climate data in the rapidily growning Idaho grape growing region and beyond."),
+            div(class = "intro-divider"),
+            div(class = "p1",
+                p("Navigation of tool is simple - use tabs in the upper left corner to select the area of interest and you'll be directed to an interactive panel to select your desired parameters and visualize the data.")),
+            div(class = "pblock",
+                tags$p(tags$b("Explorer"), " is a spatial plotting tool to visualize historical and anomalous climate over individual years (or subsets thereof) in the Snake River Valley AVA and more broadly in the Pacific Northwest."),
+                tags$p(tags$b("Time Series"), " is a temporal explorer to compare mean climatological values from different years."),
+                tags$p("The ", tags$b("Statistics"), "tab is a work in progress..."),
+                tags$p("The ", tags$b("Background"), "tab is a work in progress...")),
+            div(class = "intro-divider2"),
+            a(href = "https://www.boisestate.edu",target = "_blank", img(src="BSU2.png", class = "logo1")),
+            a(href = "https://agri.idaho.gov/main/", target = "_blank", img(src="ISDOA.png", class = "logo2")),
+            a(href = "https://leaf.boisestate.edu/people/", target = "_blank", img(src="LEAF2.png", class = "logo3"))
+                 ),
     tabPanel("Explorer",             
     useShinyjs(),
-    tags$style(appCSS),
-    titlePanel("Snake River Valley American Viticultural Area"),
+    titlePanel("Spatial Cliamte Explorer"),
     sidebarLayout(
         sidebarPanel(
             radioButtons("domainInput", "Domain", choices = c("Snake River AVA (1km resolution)", "Domain 02 (1km resolution)", "Domain 01 (3km resolution)"), selected = "Snake River AVA (1km resolution)"),
@@ -95,13 +118,14 @@ ui <- navbarPage("SRAVA",
             selectInput("yearInput", "Year", choices = 1988:2017, selected = "1988"),
             conditionalPanel(
                 condition = "input.plotInput == 'Historical'",
-                sliderInput("dateInput", "Days of Water Year", min = 1, max = 365, value = c(1,10))),
+                sliderInput("dateInput", "Days of Water Year", min = 1, max = 365, value = c(1,10)),
+                dateRangeInput("myDate","Select dates to view", format = "mm-dd", startview = "year")),
             conditionalPanel(
                 condition = "input.plotInput == 'Monthly Anomaly'",
                 selectInput("monInput","Month", choices = monNames)),
             withBusyIndicatorUI(actionButton("button", "Create Map", class = "btn-primary"))),
         mainPanel(
-            leafletOutput("myMap", width = "900", height = "650"),
+            leafletOutput("myMap", width = "1500", height = "1200"),
             br(),br()
         ))),
         tabPanel("TimeSeries",
@@ -120,12 +144,13 @@ ui <- navbarPage("SRAVA",
                                       choices = c("Fahrenheit/Inches", "Celcius/mm"), selected = "Fahrenheit/Inches")),
                      
                      mainPanel(
-                         dygraphOutput("myGraph", width = "900", height = "650"),
+                         dygraphOutput("myGraph", width = "1500", height = "750"),
                          br(),br()
                      )
                  )),
-        tabPanel("Stats"),
-        tabPanel("Background")
+        tabPanel("Statistics"),
+        tabPanel("Background"),
+        tabPanel("Contact")
     
 )
 
