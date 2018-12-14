@@ -1,0 +1,105 @@
+.text-block {
+  position: absolute;
+  top: 100px;
+  right: 60px;
+  background-color: black;
+  color: lightgrey;
+  padding-left: 20px;
+  padding-right: 20px;
+  opacity: 0.55;
+}
+
+.imgcon {
+  width:100%;
+  height:100%;
+  position: relative;
+}
+
+h1 {
+  font-size: 500%;
+  font-family: gustan;
+}
+
+h2 {
+  text-align: left;
+  padding-left: 15%;
+  padding-right: 15%;
+  padding-top: 2%;
+}
+
+.intro-divider {
+   height: 6px;
+   background: transparent linear-gradient(to right, #157BA3 0%, #96D602 100%) repeat scroll 0% 0%;
+   margin-top: 2%;
+   margin-bottom: 2%;
+   margin-left: 15%;
+   margin-right: 15%;
+}
+
+.intro-divider2 {
+  height: 8px;
+  background: transparent linear-gradient(to right, #96D602 0%,  #157BA3 100%) repeat scroll 0% 0%;
+  margin-top: 1%;
+  margin-bottom: 1%;
+  margin-left: 15%;
+  margin-right: 15%;
+}
+
+p {
+  margin-bottom:40px;
+}
+
+.p1 {
+  margin-left: 15%;
+  margin-right: 15%;
+  font-size: 150%;
+  text-align: left;
+  padding-left: 50px;
+  padding-right: 50px;
+}
+
+.pblock {
+  color: black;
+  padding-left: 50px;
+  padding-right: 50px;
+  text-align: left;
+  margin-left: 18%;
+  margin-right: 15%;
+  font-size: 150%;
+}
+
+.logo1 {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  margin-left: -98px;
+}
+
+.logo2 {
+  position: absolute;
+  bottom: 50px;
+  right: 25%;
+  width: 200px;
+  height:140px;
+}
+
+.logo3 {
+  position: absolute;
+  bottom: 50px;
+  width: 300px;
+  height: 140px;
+  left: 23%;
+}
+
+.navbar-nav li a:hover, .navbar-nav > .active > a {
+  color: #fff !important;
+  
+  background-color: darkolivegreen !important;
+  background-image: none !important;
+}
+
+.navbar-nav {
+  font-size: 200%;
+  margin-left: 31%;
+  background-color: lightgray;
+}
