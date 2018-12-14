@@ -10,33 +10,40 @@ library(dplyr)
 library(htmlwidgets)
 library(dygraphs)
 
+# script to create animation for loading new map
 source("buttonIndicator.R")
 
+# set working directory
+setwd("/Users/charlesbecker/Desktop/Data/30YR_Daily/Data/")
+
+# laod data for dygraphs (AVA)
 d <- read.csv("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/AVA_30YR_NoLeap917.csv")
+
+# create a list of non-leap year dates to be used for dygraphs (year will be stripped)
 dates <- seq(as.Date("1987-01-01"),as.Date("1987-12-31"), "day")
 
-#the axis label is passed as a date, this function outputs only the month of the date
+# Javascript to get the axis label passed as a date, this function outputs only the month of the date
 getMonth <- 'function(d){
 var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun","Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 return monthNames[d.getMonth()];
 }'
 
-#the x values are passed as milliseconds, turn them into a date and extract month and day
+# Javascript to get the x values passed as milliseconds, turn them into a date and extract month and day
 getMonthDay <- 'function(d) {
 var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun","Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 date = new Date(d);
 return monthNames[date.getMonth()] + " " +date.getUTCDate(); }'
 
+# Scale type for dygrpahs
 scaleType <- c("Individual Years", "Monthly (across all years)", "All years")
 
-setwd("/Users/charlesbecker/Desktop/Data/30YR_Daily/Data/")
-
+# create month names
 monNames = c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
 
-# get netCDF datamb 
+# get list of netCDF files (raw data)
 ncFileNames <- list.files(pattern = ".nc")
 
-# initial raster
+# initial file for default map upon loading
 init_raster <- "AVA_WY1988_yearly_stats_d02.nc"
 
 # get AVA Shape File
@@ -80,57 +87,80 @@ map = leaflet() %>% addTiles() %>%
               title = "GDD",labFormat = 
                   labelFormat(transform = function(x) sort(x, decreasing = TRUE))) 
 
-
 ################################################################################
+# User interface 
+#
 
 ui <- navbarPage("",
+                 
+        # Landing page.  "tags$" is replicating HTML directly         
         tabPanel("Home",
+                 
+            # Load CSS file (in /www)     
             tags$head(
-                tags$link(rel = "stylesheet", type = "text/css", href = "test1.css")
+                tags$link(rel = "stylesheet", type = "text/css", href = "app.css")
             ),
-            setBackgroundColor("white"),
-            img(src="test_vine.jpg", class = "imgcon"),
-            div(class = "text-block",
-            h1("Snake River Valley AVA"),
-            h1("Climate Explorer")),
-            h2("The Snake River Valley American Viticulture Area Climate Explore is an interactive tool to visualize 30 years of high resolution climate data in the rapidily growning Idaho grape growing region and beyond."),
-            div(class = "intro-divider"),
-            div(class = "p1",
-                p("Navigation of tool is simple - use tabs in the upper left corner to select the area of interest and you'll be directed to an interactive panel to select your desired parameters and visualize the data.")),
-            div(class = "pblock",
+            setBackgroundColor("white"), 
+            tags$img(src="test_vine.jpg", class = "imgcon"), # top banner image
+            tags$div(class = "text-block", # load CSS .text-block (style and positioning)
+                tags$h1("Snake River Valley AVA"), # Title
+                tags$h1("Climate Explorer")),
+            tags$h2("The Snake River Valley American Viticulture Area Climate Explore is an interactive tool to visualize 30 years of high resolution climate data in the rapidily growning Idaho grape growing region and beyond."),
+            tags$div(class = "intro-divider"), # see CSS "intro-divider" for how to make the gradient lines
+            tags$div(class = "p1",
+                tags$p("Navigation of tool is simple - use tabs in the upper left corner to select the area of interest and you'll be directed to an interactive panel to select your desired parameters and visualize the data.")),
+            tags$div(class = "pblock",
                 tags$p(tags$b("Explorer"), " is a spatial plotting tool to visualize historical and anomalous climate over individual years (or subsets thereof) in the Snake River Valley AVA and more broadly in the Pacific Northwest."),
                 tags$p(tags$b("Time Series"), " is a temporal explorer to compare mean climatological values from different years."),
                 tags$p("The ", tags$b("Statistics"), "tab is a work in progress..."),
                 tags$p("The ", tags$b("Background"), "tab is a work in progress...")),
-            div(class = "intro-divider2"),
-            a(href = "https://www.boisestate.edu",target = "_blank", img(src="BSU2.png", class = "logo1")),
-            a(href = "https://agri.idaho.gov/main/", target = "_blank", img(src="ISDOA.png", class = "logo2")),
-            a(href = "https://leaf.boisestate.edu/people/", target = "_blank", img(src="LEAF2.png", class = "logo3"))
+            tags$div(class = "intro-divider2"),
+            
+            # Logos at bottom of page with links
+            tags$a(href = "https://www.boisestate.edu",target = "_blank", img(src="BSU2.png", class = "logo1")), 
+            tags$a(href = "https://agri.idaho.gov/main/", target = "_blank", img(src="ISDOA.png", class = "logo2")),
+            tags$a(href = "https://leaf.boisestate.edu/people/", target = "_blank", img(src="LEAF2.png", class = "logo3"))
                  ),
+    # Explorer tab - the spatial viewer    
     tabPanel("Explorer",             
     useShinyjs(),
-    titlePanel("Spatial Cliamte Explorer"),
+    titlePanel(""),
     sidebarLayout(
+        
+        # create side panel for parameter adjustment
         sidebarPanel(
+            
+            # Input types with defaults selected 
             radioButtons("domainInput", "Domain", choices = c("Snake River AVA (1km resolution)", "Domain 02 (1km resolution)", "Domain 01 (3km resolution)"), selected = "Snake River AVA (1km resolution)"),
             radioButtons("plotInput", "Plot", choices = c("Historical","Yearly Anomaly", "Monthly Anomaly"), selected = "Historical"),
             selectInput("varInput", "Variables", choices = varNamesLong, selected = varNamesLong[1]),
             selectInput("yearInput", "Year", choices = 1988:2017, selected = "1988"),
+            
+            # conditional parameter (add date selector) if looking at 'historical' data
             conditionalPanel(
                 condition = "input.plotInput == 'Historical'",
                 sliderInput("dateInput", "Days of Water Year", min = 1, max = 365, value = c(1,10)),
                 dateRangeInput("myDate","Select dates to view", format = "mm-dd", startview = "year")),
+            
+            # conditional parameter (add month) if looking at 'Monthly Anomaly' data
             conditionalPanel(
                 condition = "input.plotInput == 'Monthly Anomaly'",
                 selectInput("monInput","Month", choices = monNames)),
+            
+            # call custom function for creating "Create map"button
             withBusyIndicatorUI(actionButton("button", "Create Map", class = "btn-primary"))),
+        # start main panel (defaulted to right side)
         mainPanel(
-            leafletOutput("myMap", width = "1500", height = "1200"),
-            br(),br()
+            
+            # Render leaflet map
+            leafletOutput("myMap", width = "100%", height = "88vh")
         ))),
+    
+        # Start Time Seeries tab
         tabPanel("TimeSeries",
-                 titlePanel("Time series statistics"),
+                 titlePanel(""),
                  sidebarLayout(
+                     # Inputs 
                      sidebarPanel(
                          selectInput("domainInput1", "Domain",
                                      choices = c("Snake River AVA", "Sunnyslope", "Domain 02", "Domain 01"),  
@@ -144,8 +174,8 @@ ui <- navbarPage("",
                                       choices = c("Fahrenheit/Inches", "Celcius/mm"), selected = "Fahrenheit/Inches")),
                      
                      mainPanel(
-                         dygraphOutput("myGraph", width = "1500", height = "750"),
-                         br(),br()
+                         # "Dygraph" (interactive timeseries graph)
+                         dygraphOutput("myGraph", width = "100%", height = "88vh")
                      )
                  )),
         tabPanel("Statistics"),
@@ -161,14 +191,13 @@ server = function(input, output, session) {
 ###############################################################################
 #  The follwing section refers to the "Explorer" Tab Panel 
     
-    
     # render leaflet map
     output$myMap <- renderLeaflet(map)
     
     # get variable name to pull from data from user selection
     v <- reactive ({ ncVarNames[match(input$varInput, varNamesLong)] })
-   # m <- reactive ({ monNames[match(input$monInput, monNames)] })
-    # conditionals to determine which file to load 
+    
+    # conditionals to determine which file to load (based on year and domain)
     rast <- eventReactive(input$button, { 
         if (input$plotInput == "Historical") {
             if (input$domainInput == "Snake River AVA (1km resolution)") { 
@@ -200,22 +229,26 @@ server = function(input, output, session) {
     # set the extent of loaded file for proper projection
     rast1 <- eventReactive(input$button, { setExtent(rast(), myExtent) })
     
-    # project to the leaflet lat/long grid 
+    # project to the leaflet lat/long grid based on conditions
     rast2 <- eventReactive(input$button, { 
         
+        # if historical...
         if (input$plotInput == "Historical") {
         
+            #(if selected temperature (use mean instead of sum))
             if ((input$varInput %in% varNamesLong[1:3]) == TRUE) {
                 
                 projectRasterForLeaflet(mean(rast1()[[input$dateInput[1]:input$dateInput[2]]], na.rm = T), method = "bilinear") }
+            # use sum (non-temperature metrics)
             else {
                 projectRasterForLeaflet(sum(rast1()[[input$dateInput[1]:input$dateInput[2]]]), method = "bilinear") }}
         
+        # if yearly anomaly
         else if (input$plotInput == "Yearly Anomaly" || input$plotInput == "Monthly Anomaly") {
             
             projectRasterForLeaflet(rast1()[[as.integer(input$yearInput)-1987]]-rast1()[[31]], method = "bilinear")
      }})
-    #input$yearInput - 1987
+
     # set color palette
     color_pal <- eventReactive(input$button, { colorNumeric(c("dark red", "light blue", "dark green"), values(rast2()),
                                           na.color = "transparent") })
@@ -224,37 +257,45 @@ server = function(input, output, session) {
     rev_color_pal <- eventReactive(input$button, { colorNumeric(rev(c("dark red", "light blue", "dark green")), values(rast2()),
                                               na.color = "transparent") })
     
-        # create proxy leaflet map (from original map) 
+    # create proxy leaflet map (from original map) 
     observeEvent(input$button, {
-        withBusyIndicatorServer("button", { 
+        withBusyIndicatorServer("button", { # add loading icon...
         leafletProxy("myMap", data = rast2()) %>%
             clearImages() %>%
             clearControls() %>%
-            addRasterImage(rast2(),colors = rev_color_pal(), opacity = .7) %>%
-            addMarkers(lat = 43.5885, lng = -116.7932, label = as.character(round(rast2()[221,79],2))) %>%
-            addLegend(pal = color_pal(), values = values(rast2()),
+            addRasterImage(rast2(),colors = rev_color_pal(), opacity = .7) %>% # add the raster data
+            addMarkers(lat = 43.5885, lng = -116.7932, label = as.character(round(rast2()[221,79],2))) %>% # add sunnyslope marker
+            addLegend(pal = color_pal(), values = values(rast2()), # add legend
                       title = v(), labFormat = 
                           labelFormat(transform = function(x) sort(x, decreasing = TRUE)))})
     })
     
-
-
 ###############################################################################
 ## The Following section refers to the "Time series" tabPanel
 
+# get variable selection    
 vv <- reactive ({ ncVarNames[match(input$varInput1, varNamesLong)] })
 
-dd <- reactive ({ if (vv() == "TMAX" | vv() == "TMIN" | vv() == "TMEAN") {
+ # create dataframe
+dd <- reactive ({ 
     
-    as.data.frame(bind_cols(split(d[[vv()]], d$YEAR)) %>% select(input$yearInput1)
+    # if temperature is selected, get mean data 
+    if (vv() == "TMAX" | vv() == "TMIN" | vv() == "TMEAN") {
+    
+        as.data.frame(bind_cols(split(d[[vv()]], d$YEAR)) %>% select(input$yearInput1)
     )}
+    
+    # if != temp, get cummulative sum of data
     else {cumsum(as.data.frame(bind_cols(split(d[[vv()]], d$YEAR)) %>% select(input$yearInput1))) }
 })
 
+# transform dataframe 
 df <- reactive ({ data.frame(dates, dd()) })
 
+# create xts object and order by date (for time series data - required by dygraphs)
 df_dy <- reactive ({ xts(df(), order.by = dates) })
 
+# render the dygraph using the javascript functions to correct the axis labels
 output$myGraph <- renderDygraph({ dygraph(df_dy()) %>% 
         dyAxis("x", axisLabelFormatter = JS(getMonth), valueFormatter = JS(getMonthDay)) })
 
@@ -262,4 +303,10 @@ output$myGraph <- renderDygraph({ dygraph(df_dy()) %>%
 session$onSessionEnded(stopApp)
 }
 
+# required when using single app.R with both ui and server combined
 shinyApp(ui, server)
+
+###############################################################################
+# The folling section refers to the "Statistics" tab
+
+# Coming soon!
