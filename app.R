@@ -9,6 +9,7 @@ library(shinyWidgets)
 library(dplyr)
 library(htmlwidgets)
 library(dygraphs)
+library(DT)
 
 # script to create animation for loading new map
 source("buttonIndicator.R")
@@ -179,7 +180,18 @@ ui <- navbarPage("",
                          dygraphOutput("myGraph", width = "100%", height = "60vh")
                      )
                  )),
-        tabPanel("Statistics"),
+        tabPanel("Statistics",
+                 titlePanel(""),
+                 sidebarPanel(
+                     selectInput("domainInput2", "Domain",
+                        choices = c("Snake River AVA", "Sunnyslope", "Domain 02", "Domain 01"),  
+                        selected = "Snake River AVA"),
+                     selectInput("myGroup", "Group by",
+                        choices = c("YEAR","MONTH","DAY"),
+                        selected = "YEAR")),
+                mainPanel(
+                     DT::dataTableOutput("myTable", height = "75vh")
+                 )),
         tabPanel("Background"),
         tabPanel("Contact")
     
@@ -301,14 +313,36 @@ output$myGraph <- renderDygraph({ dygraph(df_dy()) %>%
         dyRangeSelector() %>%
         dyAxis("x", axisLabelFormatter = JS(getMonth), valueFormatter = JS(getMonthDay)) })
 
+###############################################################################
+# The folling section refers to the "Statistics" tab
+
+# Coming soon!
+
+df_stats <- reactive ({ 
+    
+    if (input$domainInput2 == "Snake River AVA") {
+        read.csv("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/AVA_30YR_NoLeap917.csv") }
+    else if (input$domainInput2 == "Sunnyslope") {
+        read.csv("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/SS_30YR_NoLeap917.csv") }
+    else if (input$domainInput2 == "Domain 01") {
+        read.csv("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/d01_30YR_NoLeap917.csv") }
+    else if (input$domainInput2 == "Domain 02") {
+        read.csv("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/d02_30YR_NoLeap917.csv") }
+        })
+
+DTdf <-  reactive ({ df_stats() %>% group_by_(input$myGroup)  %>% na.omit() %>% summarise(Mean_Temp = mean(TMEAN),
+            Mean_Max_Temp = mean(TMAX), Mean_Min_Temp = mean(TMIN), GDD = sum(GDD),
+            Total_Precip = sum(DPRCP), Total_Snow = sum(DSNOW), Frost_Days = sum(FROSTD),
+            Frost_Hours = sum(FROSTH)) %>% round(2) })
+
+output$myTable <- DT::renderDataTable({ DT::datatable(DTdf(),fillContainer = T,
+                    options = list(pageLength = 50)) })
+
+    
+############################################################################### 
 # Kill the app when closed in the browser 
 session$onSessionEnded(stopApp)
 }
 
 # required when using single app.R with both ui and server combined
 shinyApp(ui, server)
-
-###############################################################################
-# The folling section refers to the "Statistics" tab
-
-# Coming soon!
