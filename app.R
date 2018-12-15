@@ -98,17 +98,18 @@ ui <- navbarPage("",
                  
             # Load CSS file (in /www)     
             tags$head(
-                tags$link(rel = "stylesheet", type = "text/css", href = "app.css")
+                tags$link(rel = "stylesheet", type = "text/css", href = "app.css"),
+                tags$meta(name="viewport", content="initial-scale=1")
             ),
             setBackgroundColor("white"), 
             tags$img(src="test_vine.jpg", class = "imgcon"), # top banner image
             tags$div(class = "text-block", # load CSS .text-block (style and positioning)
                 tags$h1("Snake River Valley AVA"), # Title
                 tags$h1("Climate Explorer")),
-            tags$h2("The Snake River Valley American Viticulture Area Climate Explore is an interactive tool to visualize 30 years of high resolution climate data in the rapidily growning Idaho grape growing region and beyond."),
-            tags$div(class = "intro-divider"), # see CSS "intro-divider" for how to make the gradient lines
             tags$div(class = "p1",
-                tags$p("Navigation of tool is simple - use tabs in the upper left corner to select the area of interest and you'll be directed to an interactive panel to select your desired parameters and visualize the data.")),
+                tags$p("The Snake River Valley American Viticulture Area Climate Explore is an interactive tool to visualize 30 years of high resolution climate data in the rapidily growning Idaho grape growing region and beyond."),
+                tags$p("Navigation of tool is simple - use tabs up top to select the area of interest and you'll be directed to an interactive panel to select your desired parameters and visualize the data.")),
+            tags$div(class = "intro-divider"), # see CSS "intro-divider" for how to make the gradient lines
             tags$div(class = "pblock",
                 tags$p(tags$b("Explorer"), " is a spatial plotting tool to visualize historical and anomalous climate over individual years (or subsets thereof) in the Snake River Valley AVA and more broadly in the Pacific Northwest."),
                 tags$p(tags$b("Time Series"), " is a temporal explorer to compare mean climatological values from different years."),
@@ -175,7 +176,7 @@ ui <- navbarPage("",
                      
                      mainPanel(
                          # "Dygraph" (interactive timeseries graph)
-                         dygraphOutput("myGraph", width = "100%", height = "88vh")
+                         dygraphOutput("myGraph", width = "100%", height = "60vh")
                      )
                  )),
         tabPanel("Statistics"),
@@ -297,6 +298,7 @@ df_dy <- reactive ({ xts(df(), order.by = dates) })
 
 # render the dygraph using the javascript functions to correct the axis labels
 output$myGraph <- renderDygraph({ dygraph(df_dy()) %>% 
+        dyRangeSelector() %>%
         dyAxis("x", axisLabelFormatter = JS(getMonth), valueFormatter = JS(getMonthDay)) })
 
 # Kill the app when closed in the browser 
