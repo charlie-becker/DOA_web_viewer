@@ -127,18 +127,19 @@ ui <- navbarPage("",
     tabPanel("Explorer",             
     useShinyjs(),
     sidebarLayout(
+        
         # create side panel for parameter adjustment
         sidebarPanel(
-            strong('Spatial Data Explorer', style = "font-size:36px"), br(), br(), #div(class = "intro-divider3"), br(),
+            strong('Spatial Data Explorer', style = "font-size:36px"), br(), br(), 
             p('The spatial explorer shows the Snake River AVA - where the majority of Idaho’s vineyards are located. The full [dataset] expands far beyond this area which can be visualized by selecting the region of your choice. The plot can be zoomed in or out in the same fashion as Google Maps.', style = "font-size:18px"),
             p('To create a unique plot, select a climate variable (for example, temperature or precipitation) and years on the left and then click the ‘create map’ button. The historical option will require a date range to be averaged or summed over (depending on the variable).', style = "font-size:18px"),
             p('Anomalies are the difference between your year of choice  and the average of that variable for all 30 years.  For example, if you select ‘Monthly Anomaly’, VARIABLE=’Minimum Daily Temperature’,‘YEAR=2011’ and ‘MONTH=April’ you will get a plot showing the difference between the average minimum daily temperatures for the month of April in 2011 and the average minimum temperatures in April for all years spanning 1988-2017. In this example, temperatures are about 2.0 - 3.5 degrees Celsius cooler in April 2011 than the 30 year average. If you were to look at your crop yields over the 30 year timespan, it would be interesting to see how the deviation from average in 2011 affected your yields that year!', style = "font-size:18px"),
             br(), div(class = "intro-divider3"), br(),
         
             # Input types with defaults selected 
-            radioButtons("domainInput", "Domain", choices = c("Snake River AVA (1km resolution)", "Domain 02 (1km resolution)", "Domain 01 (3km resolution)"), selected = "Snake River AVA (1km resolution)"),
-            radioButtons("plotInput", "Plot", choices = c("Historical","Yearly Anomaly", "Monthly Anomaly"), selected = "Historical"),
-            selectInput("varInput", "Variables", choices = varNamesLong, selected = varNamesLong[1]),
+            radioButtons("domainInput", "Region", choices = c("Snake River AVA (1km resolution)", "Greater Idaho (1km resolution)", "Greater Pacific Northwest (3km resolution)"), selected = "Snake River AVA (1km resolution)"),
+            radioButtons("plotInput", "Plot Type", choices = c("Historical","Yearly Anomaly", "Monthly Anomaly"), selected = "Historical"),
+            selectInput("varInput", "Variable", choices = varNamesLong, selected = varNamesLong[1]),
             selectInput("yearInput", "Year", choices = 1988:2017, selected = "1988"),
             
             # conditional parameter (add date selector) if looking at 'historical' data
@@ -218,24 +219,24 @@ server = function(input, output, session) {
             if (input$domainInput == "Snake River AVA (1km resolution)") { 
                 brick(paste0("./AVA_WY",input$yearInput, "_yearly_stats_d02.nc"), varname = v(),
                       crs = myCRS) }
-            else if (input$domainInput == "Domain 02 (1km resolution)") { 
+            else if (input$domainInput == "Greater Idaho (1km resolution)") { 
                 brick(paste0("./WY",input$yearInput, "_yearly_stats_d02.nc"), varname = v(),
                       crs = myCRS) }
-            else if (input$domainInput == "Domain 01 (3km resolution)") { 
+            else if (input$domainInput == "Greater Pacific Northwest (3km resolution)") { 
                 brick(paste0("./WY",input$yearInput, "_yearly_stats_d01.nc"), varname = v(),
                       crs = myCRS) }}
         else if (input$plotInput == "Yearly Anomaly") {
             if (input$domainInput == "Snake River AVA (1km resolution)") { 
                 brick("./AVA_Yearly_Anomalies_d02.nc", varname = v(),
                       crs = myCRS) }
-            else if (input$domainInput == "Domain 02 (1km resolution)") { 
+            else if (input$domainInput == "Greater Idaho (1km resolution)") { 
                 brick("./Yearly_Anomalies_d02.nc", varname = v(),
                       crs = myCRS) }}
         else if (input$plotInput == "Monthly Anomaly") {
             if (input$domainInput == "Snake River AVA (1km resolution)") { 
                 brick(paste0("./", input$monInput, "_AVA_Anomalies_d02.nc"), varname = v(),
                       crs = myCRS) }
-            else if (input$domainInput == "Domain 02 (1km resolution)") { 
+            else if (input$domainInput == "Greater Idaho (1km resolution)") { 
                 brick(paste0("./", input$monInput, "_Anomalies_d02.nc"), varname = v(),
                       crs = myCRS) }
         }}
