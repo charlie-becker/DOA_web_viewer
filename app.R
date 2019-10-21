@@ -126,14 +126,21 @@ ui <- navbarPage("",
     # Explorer tab - the spatial viewer    
     tabPanel("Explorer",             
     useShinyjs(),
+    titlePanel(""),
     sidebarLayout(
         
         # create side panel for parameter adjustment
         sidebarPanel(
             strong('Spatial Data Explorer', style = "font-size:36px"), br(), br(), 
-            p('The spatial explorer shows the Snake River AVA - where the majority of Idaho’s vineyards are located. The full [dataset] expands far beyond this area which can be visualized by selecting the region of your choice. The plot can be zoomed in or out in the same fashion as Google Maps.', style = "font-size:18px"),
-            p('To create a unique plot, select a climate variable (for example, temperature or precipitation) and years on the left and then click the ‘create map’ button. The historical option will require a date range to be averaged or summed over (depending on the variable).', style = "font-size:18px"),
-            p('Anomalies are the difference between your year of choice  and the average of that variable for all 30 years.  For example, if you select ‘Monthly Anomaly’, VARIABLE=’Minimum Daily Temperature’,‘YEAR=2011’ and ‘MONTH=April’ you will get a plot showing the difference between the average minimum daily temperatures for the month of April in 2011 and the average minimum temperatures in April for all years spanning 1988-2017. In this example, temperatures are about 2.0 - 3.5 degrees Celsius cooler in April 2011 than the 30 year average. If you were to look at your crop yields over the 30 year timespan, it would be interesting to see how the deviation from average in 2011 affected your yields that year!', style = "font-size:18px"),
+            p('The spatial explorer shows the Snake River AVA - where the majority of Idaho’s vineyards are located. The full [dataset] expands far beyond this area which can be visualized
+              by selecting the region of your choice. The plot can be zoomed in or out in the same fashion as Google Maps.', style = "font-size:18px"),
+            p('To create a unique plot, select a climate variable (for example, temperature or precipitation) and years on the left and then click the ‘create map’ button. The historical option
+              will require a date range to be averaged or summed over (depending on the variable).', style = "font-size:18px"),
+            p('Anomalies are the difference between your year of choice  and the average of that variable for all 30 years.  For example, if you select ‘Monthly Anomaly’, VARIABLE=’Minimum
+              Daily Temperature’,‘YEAR=2011’ and ‘MONTH=April’ you will get a plot showing the difference between the average minimum daily temperatures for the month of April in 2011 and the
+              average minimum temperatures in April for all years spanning 1988-2017. In this example, temperatures are about 2.0 - 3.5 degrees Celsius cooler in April 2011 than the 30 year
+              average. If you were to look at your crop yields over the 30 year timespan, it would be interesting to see how the deviation from average in 2011 affected your yields that year!',
+              style = "font-size:18px"),
             br(), div(class = "intro-divider3"), br(),
         
             # Input types with defaults selected 
@@ -166,7 +173,17 @@ ui <- navbarPage("",
                  titlePanel(""),
                  sidebarLayout(
                      # Inputs 
+                     
                      sidebarPanel(
+                         strong('Timeseries Data Explorer', style = "font-size:36px"), br(), br(), 
+                         p('To use the time series graph, select the region, variable and up to five different years to be compared simultaneously - the graph will update automatically as inputs 
+                           are changed. Mousing over the graph will display the values at that location for each value in the upper right corner along with the date.  You can zoom into these graphs
+                           by clicking and dragging across an area  on the map or by moving  the slider below the graph.', style = "font-size:18px"),
+                         p("Each data line represents the average value over the entire region that has been selected. These time series graphs are particularly useful for assessing climate
+                           differences between different years. For example, if you select Growing Degree Days and the years 2006 and 2007 you can compare the mean cumulative GDD of each year
+                           through time. ", style = "font-size:18px"),
+                         br(), div(class = "intro-divider3"), br(),
+            
                          selectInput("domainInput1", "Domain",
                                      choices = c("Snake River AVA", "Sunnyslope", "Domain 02", "Domain 01"),  
                                      selected = "Snake River AVA"),
@@ -186,6 +203,13 @@ ui <- navbarPage("",
         tabPanel("Statistics",
                  titlePanel(""),
                  sidebarPanel(
+                     strong('Statistics', style = "font-size:36px"), br(), br(),
+                     p('The data table will update as  different regions or time periods are selected.  Additionally, you can click on any header within the table itself to organize the table 
+                       by ascending or descending values of that variable. To export the data …', style = "font-size:18px"),
+                     p('Assessing these statistics could tell you xyz … about your operation, the variability of these climate conditions in the past ...', style = "font-size:18px"),
+                     p('In future versions of the climate data explorer we will add the capability for you to get these same statistics for your own area of interest!', style = "font-size:18px"),
+                     br(), div(class = "intro-divider3"), br(),
+                     
                      selectInput("domainInput2", "Domain",
                         choices = c("Snake River AVA", "Sunnyslope", "Domain 02", "Domain 01"),  
                         selected = "Snake River AVA"),
@@ -195,8 +219,8 @@ ui <- navbarPage("",
                 mainPanel(
                      DT::dataTableOutput("myTable", height = "75vh")
                  )),
-        tabPanel("Background"),
-        tabPanel("Contact")
+        tabPanel("Background")
+
     
 )
 
