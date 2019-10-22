@@ -90,7 +90,6 @@ map = leaflet() %>% addTiles() %>%
 
 ################################################################################
 # User interface 
-#
 
 ui <- navbarPage("",
                  
@@ -102,31 +101,26 @@ ui <- navbarPage("",
                 tags$link(rel = "stylesheet", type = "text/css", href = "app.css"),
                 tags$meta(name="viewport", content="initial-scale=1")
             ),
-            setBackgroundColor("white"), 
-            tags$img(src="test_vine.jpg", class = "imgcon"), # top banner image
+            setBackgroundColor("lightgrey"), 
+            tags$img(class="bg", src="ales-me-z0bACVUDTJM-unsplash.jpg"),
             tags$div(class = "text-block", # load CSS .text-block (style and positioning)
-                tags$h1("Snake River Valley AVA"), # Title
-                tags$h1("Climate Explorer")),
-            tags$div(class = "p1",
-                tags$p("The Snake River Valley American Viticulture Area Climate Explore is an interactive tool to visualize 30 years of high resolution climate data in the rapidily growning Idaho grape growing region and beyond."),
-                tags$p("Navigation of tool is simple - use tabs up top to select the area of interest and you'll be directed to an interactive panel to select your desired parameters and visualize the data.")),
-            tags$div(class = "intro-divider"), # see CSS "intro-divider" for how to make the gradient lines
-            tags$div(class = "pblock",
-                tags$p(tags$b("Explorer"), " is a spatial plotting tool to visualize historical and anomalous climate over individual years (or subsets thereof) in the Snake River Valley AVA and more broadly in the Pacific Northwest."),
-                tags$p(tags$b("Time Series"), " is a temporal explorer to compare mean climatological values from different years."),
-                tags$p("The ", tags$b("Statistics"), "tab is a work in progress..."),
-                tags$p("The ", tags$b("Background"), "tab is a work in progress...")),
-            tags$div(class = "intro-divider2"),
-            
-            # Logos at bottom of page with links
-            tags$a(href = "https://www.boisestate.edu",target = "_blank", img(src="BSU2.png", class = "logo1")), 
-            tags$a(href = "https://agri.idaho.gov/main/", target = "_blank", img(src="ISDOA.png", class = "logo2")),
-            tags$a(href = "https://leaf.boisestate.edu/people/", target = "_blank", img(src="LEAF2.png", class = "logo3"))
-                 ),
+                     tags$h1("Snake River Valley AVA"), # Title
+                     tags$h1("Climate Explorer")),
+            tags$div(class="landing-block",
+                     p(class="lp_text","The Snake River Valley American Viticultural Area (AVA) Climate Explorer is an interactive tool to visualize 30 years of
+                                high resolution climate data in the rapidly growing Idaho grape growing region and beyond."),
+                     p(class='lp_text', "In the age of big data and high computational power, new and novel climate datasets are available that can be leveraged to
+                                inform wine enthusiasts and farmers alike about historical climate conditions."),
+                     p(class="lp_text","Use the toolbar at the top of the page to select the data or information category of interest and you’ll be directed to
+                                a dynamic graph for visualization or a table for downloading. Under the background tab you’ll find additional information 
+                                about the project and dataset."),
+                     br(), div(class = "intro-divider4"), br(),
+                     p(class="fp_note","PLEASE NOTE: This app may time-out if left idle too long, which will cause the screen to grey-out. To use the app again, 
+                                refresh the page. This will reset all previously-selected input options."))),
     # Explorer tab - the spatial viewer    
     tabPanel("Explorer",             
     useShinyjs(),
-    titlePanel(""),
+    #titlePanel(""),
     sidebarLayout(
         
         # create side panel for parameter adjustment
@@ -170,7 +164,7 @@ ui <- navbarPage("",
     
         # Start Time Seeries tab
         tabPanel("TimeSeries",
-                 titlePanel(""),
+                 #titlePanel(""),
                  sidebarLayout(
                      # Inputs 
                      
@@ -201,7 +195,7 @@ ui <- navbarPage("",
                      )
                  )),
         tabPanel("Statistics",
-                 titlePanel(""),
+                 #titlePanel(""),
                  sidebarPanel(
                      strong('Statistics', style = "font-size:36px"), br(), br(),
                      p('The data table will update as  different regions or time periods are selected.  Additionally, you can click on any header within the table itself to organize the table 
@@ -219,9 +213,14 @@ ui <- navbarPage("",
                 mainPanel(
                      DT::dataTableOutput("myTable", height = "75vh")
                  )),
-        tabPanel("Background")
-
-    
+        tabPanel("Background",
+                 # Logos at bottom of page with links
+                 tags$a(href = "https://www.boisestate.edu",target = "_blank", img(src="BSU2.png", class = "logo1")), 
+                 tags$a(href = "https://agri.idaho.gov/main/", target = "_blank", img(src="ISDOA.png", class = "logo2")),
+                 tags$a(href = "https://leaf.boisestate.edu/people/", target = "_blank", img(src="LEAF2.png", class = "logo3")),
+                 mainPanel(width = 10,
+                     strong('Statistics', style = "font-size:36px"), br(), br()
+                 ))
 )
 
 ################################################################################

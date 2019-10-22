@@ -1,19 +1,9 @@
-.text-block {
-  position: absolute;
-  top: 10%;
-  bottom: 73%;
-  right: 2%;
-  left: 60%;
-  background-color: black;
-  color: lightgrey;
-  padding-left: 1%;
-  padding-right: 1%;
-  opacity: 0.55;
-}
+
 
 .imgcon {
   width:110%;
   height:110%;
+  margin-top: -25px;
   margin-left: -30px;
   margin-right: -30px;
   position: relative;
@@ -60,6 +50,20 @@ h2 {
   margin-right: 0%;
 }
 
+.intro-divider4 {
+  height: 3px;
+  background: transparent linear-gradient(to right, #505050 0%,  #505050 100%) repeat scroll 0% 0%;
+  margin-top: 1%;
+  margin-bottom: 1%;
+  margin-left: 0%;
+  margin-right: 0%;
+}
+
+.fp_note {
+  font-size: 0.8vw;
+  font-family: gustan;
+  color: #303030;
+}
 
 p {
   margin-bottom:2%;
@@ -116,6 +120,56 @@ p {
 
 .navbar-nav {
   font-size: 200%;
-  margin-left: 20%;
+  margin-left: -30px;
+  margin-right: 0%;
   background-color: lightgray;
+}
+
+.bg {
+  /* Set rules to fill background */
+  min-height: 100%;
+  min-width: 1024px;
+	
+  /* Set up proportionate scaling */
+  width: 100%;
+  height: auto;
+	
+  /* Set up positioning */
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+.text-block {
+  position: absolute;
+  top: 10%;
+  bottom: 73%;
+  right: 17%;
+  left: 43%;
+  background-color: black;
+  color: lightgrey;
+  padding-left: 1%;
+  padding-right: 1%;
+  opacity: 0.55;
+}
+.landing-block {
+  position: absolute;
+  top: 30%;
+  bottom: 15%;
+  right: 17%;
+  left: 48%;
+  background: rgba(200, 200, 200, 0.3);
+  color: darkgrey;
+  padding-left: 1%;
+  padding-right: 1%;
+
+}
+.lp_text {	
+  font-size: 1.25vw;
+  text-align: left;
+  padding-left: 1%;
+  padding-right: 1%;
+  padding-top: 2%;
+  color: rgba(60, 60, 60, 1);
+  font-family: gustan;
 }
