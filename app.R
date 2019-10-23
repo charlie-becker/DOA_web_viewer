@@ -198,10 +198,13 @@ ui <- navbarPage("",
                  #titlePanel(""),
                  sidebarPanel(
                      strong('Statistics', style = "font-size:36px"), br(), br(),
-                     p('The data table will update as  different regions or time periods are selected.  Additionally, you can click on any header within the table itself to organize the table 
+                     p('The data table will update as  different regions or time periods are selected.  Additionally, you can click on any header within
+                       the table itself to organize the table 
                        by ascending or descending values of that variable. To export the data …', style = "font-size:18px"),
-                     p('Assessing these statistics could tell you xyz … about your operation, the variability of these climate conditions in the past ...', style = "font-size:18px"),
-                     p('In future versions of the climate data explorer we will add the capability for you to get these same statistics for your own area of interest!', style = "font-size:18px"),
+                     p('Assessing these statistics allows you to see the total variability of each metric over 30 years and easily compare yearly
+                       summaries', style = "font-size:18px"),
+                     p('In future versions of the climate data explorer we will add the capability for you to get these same statistics for your own
+                       area of interest!', style = "font-size:18px"),
                      br(), div(class = "intro-divider3"), br(),
                      
                      selectInput("domainInput2", "Domain",
@@ -218,8 +221,37 @@ ui <- navbarPage("",
                  tags$a(href = "https://www.boisestate.edu",target = "_blank", img(src="BSU2.png", class = "logo1")), 
                  tags$a(href = "https://agri.idaho.gov/main/", target = "_blank", img(src="ISDOA.png", class = "logo2")),
                  tags$a(href = "https://leaf.boisestate.edu/people/", target = "_blank", img(src="LEAF2.png", class = "logo3")),
-                 mainPanel(width = 10,
-                     strong('Statistics', style = "font-size:36px"), br(), br()
+                 sidebarPanel(width = 5,
+                    strong('Background', style = "font-size:36px"), br(), br(),
+                    p("This project was done with through the support of a specialty crop block grant provided by the ", 
+                      tags$a(href="https://agri.idaho.gov/main/", target = "_blank", "Idaho State Department of Agriculture."), 
+                      "Viticulture and other specialty crops, such as hops, are rapidly emerging as significant crops in Idaho. The
+                      emergence of big data and computational power allows us to determine what the historical climate was in this region at a higher
+                      resolution (finer time and spatial scale) than most other products. We hope that making this data publicly available will become
+                      a valuable resource for individuals that currently, or are planning to grow crops in Idaho.", style = "font-size:18px"),
+                    p("The climate data used for this project is a modeled dataset using the ",
+                      tags$a(href="https://en.wikipedia.org/wiki/Weather_Research_and_Forecasting_Model", target="_blank", 
+                      "Weather and Research Forecasting (WRF) model. "),  "It was generated at the ", 
+                      tags$a(href="https://www.boisestate.edu/leaf/research/", target = "_blank", "LEAF lab "), 
+                      "at Boise State University.  It contains two regions of interest: a larger region covering much of
+                      the Pacific Northwest at 3km spatial resolution, and an inner region  at 1km spatial resolution.  Both of these have hourly
+                      data from water year (Oct 1 - September 30) 1988 through 2017.", style = "font-size:18px"),
+                    p("The total size of full dataset in incredibly large - over 250 terabytes! The data we show through this app is but a very small
+                      piece of the pie.  Of particular relevance is that all data shown here was aggregated from hourly to daily temporal resolution.
+                      Additionally, data in the time series or statistic sections were all spatially averaged over the region of interest. The animation 
+                      on the right showcases some of this data during the deadly frost (for many vineyards) in January 2017. You can clearly see the cold
+                      air drain into Treasure Valley at night and stay there for a couple of days as one of our famous inversions.  You can see some grey
+                      and white regions pop up at about the 0:20 mark where temperatures were -15 to -28 degrees F below zero!  ",
+                      style = "font-size:18px"),
+                    p("If you have any questions regarding our ongoing Idaho projects or general questions please feel free to contact us! We look forward
+                      to hearing from you.", style = "font-size:18px"),
+                    strong("Charlie Becker - charles11becker@gmail.com", br(), "LEAF lab - lejoflores@boisestate.edu", style = "font-size:18px")
+                              ),
+                 mainPanel(width = 7,
+                    tags$video(src="Freeze_6fps.mp4", controls="controls", type = "video/mp4", width= "90%")
+                    #div(img(src="Jvictor2.jpg", width="100%"), style="text-align:center;"),
+                    #br(), p("A view from Sunnyslope - January 2019", style = "font-size:18px; text-align:center"), br()
+                    
                  ))
 )
 
@@ -229,15 +261,17 @@ server = function(input, output, session) {
     
 ###############################################################################
 #  The follwing section refers to the "Explorer" Tab Panel 
-    
+
     # render leaflet map
     output$myMap <- renderLeaflet(map)
-    
+    # Load initial leaflet map in background in Spatial Explorer
+    outputOptions(output, "myMap", suspendWhenHidden = FALSE)
     # get variable name to pull from data from user selection
     v <- reactive ({ ncVarNames[match(input$varInput, varNamesLong)] })
     
     # conditionals to determine which file to load (based on year and domain)
     rast <- eventReactive(input$button, { 
+
         if (input$plotInput == "Historical") {
             if (input$domainInput == "Snake River AVA (1km resolution)") { 
                 brick(paste0("./AVA_WY",input$yearInput, "_yearly_stats_d02.nc"), varname = v(),
