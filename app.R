@@ -22,9 +22,68 @@ setwd("/Users/charlesbecker/Desktop/Data/30YR_Daily/Data/AVA_d02/")
 # laod data for dygraphs (AVA)
 d <- data.table::fread("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/AVA_30YR_NoLeap917.csv")
 
+# load data for site specific "Download Data" tab
+site_specific_data <- data.table::fread('~/Desktop/AVA_30YR_df_all_vars.csv')
+
 # create a list of non-leap year dates to be used for dygraphs (year will be stripped)
 dates <- seq(as.Date("1987-01-01"),as.Date("1987-12-31"), "day")
 
+
+##### R FUNCTIONS FOR DATA DOWNLOAD ############################################
+
+distance <- function(lat_dist, lon_dist) { sqrt(lat_dist*2 + lon_dist*2)}
+
+get_latlon <- function(lat, lon) {
+    
+    lats <- df$XLAT
+    lons <- df$XLONG
+    
+    a <- abs(lats - lat)
+    b <- abs(lons - lon)
+    c = distance(a,b)
+    index = which.min(c)
+    
+    return(c(lats[index],lons[index]))
+}
+
+generate_table <- function(df, lat, lon) {
+    
+    coords <- get_latlon(lat, lon)
+    dfs <- filter(df, XLAT == coords[1], XLONG == coords[2])
+    columns <- colnames(df_sub[1:18])
+    dfs <- dfs[columns]
+    trends <- c()
+    pvals <- c()
+    
+    for (i in columns[2:15]) {
+        
+        mod <- lm(dfs[[i]]~dfs$year)
+        trend <- mod[[1]][2] 
+        pval <- summary(mod)$coefficients[2,4]
+        index <- match(i, columns[2:15])
+        
+        trends[index] <- trend
+        pvals[index] <- pval
+    }
+    
+    summary_df <- as.data.frame(t(do.call(cbind, lapply(dfs[2:15], summary))))
+    summary_df <- cbind(summary_df, trends, pvals)
+    summary_df <- rename(summary_df, "Trends [units/year]" = "trends", 'P-Value' = 'pvals')
+    
+    l = list(trends, pvals, dfs[columns[1:18]], summary_df)
+    
+    return(l)
+}
+
+create_plots <- function(df_sub) {
+    
+    barplot(height=df_sub$GDD, names.arg = df_sub$year, ylim = c(1500,2200), xpd = FALSE, col = 'steelblue', border = 'black',
+            main = 'Growing degree days [C]', ylab = 'GDD', xlab='Year')
+    axis(side = 1, at = c(.75,5.5, 10.25, 15, 19.75, 24.5, 29.5, 34.25), labels = FALSE)
+    
+}
+
+##### JAVASCRIPT FUNCTIONS #########
 # Javascript to get the axis label passed as a date, this function outputs only the month of the date
 getMonth <- 'function(d){
 var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun","Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -36,6 +95,7 @@ getMonthDay <- 'function(d) {
 var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun","Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 date = new Date(d);
 return monthNames[date.getMonth()] + " " +date.getUTCDate(); }'
+####################################
 
 # Scale type for dygrpahs
 scaleType <- c("Individual Years", "Monthly (across all years)", "All years")
@@ -291,29 +351,11 @@ server = function(input, output, session) {
     output$myMap2 <- renderLeaflet({map2 %>% 
             addMouseCoordinates() })
     
-    ## Observe mouse clicks and get lat/lon
-    observeEvent(input$myMap2_click, {
-        click <- input$myMap2_click
-        clat <- click$lat
-        clon <- click$lng 
-        
-        leafletProxy('myMap2') %>%
-            clearMarkers() %>%
-            clearShapes() %>%
-            addCircles(lng=clon, lat=clat, group='circles',
-                       weight=1, radius=500, color='black', fillColor='green',
-                       fillOpacity=0.2, opacity=.5)
-        
-        output$clat <- renderUI(textInput("lattitude","Lattitude",clat))
-        output$clon <- renderUI(textInput("longitude","Longitude",clon))
-        
-    })
-    
     # Load initial leaflet map in background in Spatial Explorer
     outputOptions(output, "myMap", suspendWhenHidden = FALSE)
     
     # Load initial leaflet map in background in Download Data
-    outputOptions(output, "myMap2", suspendWhenHidden = TRUE)
+    outputOptions(output, "myMap2", suspendWhenHidden = FALSE)
     
     # get variable name to pull from data from user selection
     v <- reactive ({ ncVarNames[match(input$varInput, varNamesLong)] })
@@ -449,6 +491,24 @@ output$myTable <- DT::renderDataTable({ DT::datatable(DTdf(),fillContainer = T,
 
 ###############################################################################
 # The folling section refers to the "Download Data" tab
+
+## Observe mouse clicks and get lat/lon
+observeEvent(input$myMap2_click, {
+    click <- input$myMap2_click
+    clat <- click$lat
+    clon <- click$lng 
+    
+    leafletProxy('myMap2') %>%
+        clearMarkers() %>%
+        clearShapes() %>%
+        addCircles(lng=clon, lat=clat, group='circles',
+                   weight=1, radius=500, color='black', fillColor='green',
+                   fillOpacity=0.2, opacity=.5)
+    
+    output$clat <- renderUI(textInput("lattitude","Lattitude",clat))
+    output$clon <- renderUI(textInput("longitude","Longitude",clon))
+    
+})
 
 
 
