@@ -1,7 +1,9 @@
 library(xts)
+library(data.table)
 library(ncdf4)
 library(shiny)
 library(leaflet)
+library(leafem)
 library(raster)
 library(rjson)
 library(sp)
@@ -18,7 +20,7 @@ source("buttonIndicator.R")
 setwd("/Users/charlesbecker/Desktop/Data/30YR_Daily/Data/AVA_d02/")
 
 # laod data for dygraphs (AVA)
-d <- read.csv("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/AVA_30YR_NoLeap917.csv")
+d <- data.table::fread("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/AVA_30YR_NoLeap917.csv")
 
 # create a list of non-leap year dates to be used for dygraphs (year will be stripped)
 dates <- seq(as.Date("1987-01-01"),as.Date("1987-12-31"), "day")
@@ -88,6 +90,10 @@ map = leaflet() %>% addTiles() %>%
               title = "GDD",labFormat = 
                   labelFormat(transform = function(x) sort(x, decreasing = TRUE))) 
 
+map2 = leaflet() %>% addTiles() %>%
+    setView(lng = -116.5, lat = 43.8 ,zoom = 8) %>%
+    addGeoJSON(json, weight = .5, color = "black", fill = T, opacity = .5)
+
 ################################################################################
 # User interface 
 
@@ -137,7 +143,8 @@ ui <- navbarPage("",
             br(), div(class = "intro-divider3"), br(),
         
             # Input types with defaults selected 
-            radioButtons("domainInput", "Region", choices = c("Snake River AVA (1km resolution)", "Greater Idaho (1km resolution)", "Greater Pacific Northwest (3km resolution)"), selected = "Snake River AVA (1km resolution)"),
+            radioButtons("domainInput", "Region", choices = c("Snake River AVA (1km resolution)", "Greater Idaho (1km resolution)"), #"Greater Pacific Northwest (3km resolution)"), 
+                                                              selected = "Snake River AVA (1km resolution)"),
             radioButtons("plotInput", "Plot Type", choices = c("Historical","Yearly Anomaly", "Monthly Anomaly"), selected = "Historical"),
             selectInput("varInput", "Variable", choices = varNamesLong, selected = varNamesLong[1]),
             selectInput("yearInput", "Year", choices = 1988:2017, selected = "1988"),
@@ -215,6 +222,22 @@ ui <- navbarPage("",
                 mainPanel(
                      DT::dataTableOutput("myTable", height = "90vh")
                  )),
+        tabPanel("Download Data",
+                 sidebarPanel(width = 5,
+                    p('Testing......'),
+                    uiOutput("clat"),
+                    uiOutput("clon"),
+                    # Render leaflet map
+                    leafletOutput("myMap2", height = "50vh"),
+                    br(),
+                    # call custom function for creating "View/Download" buttons
+                    withBusyIndicatorUI(actionButton("button2", "View Report", class = "btn-primary")),
+                    br(),
+                    withBusyIndicatorUI(actionButton("button3", "Download Report", class = "btn-primary"))),
+                 mainPanel(width = 7,
+                            DT::dataTableOutput("customTable", height = "60vh"))
+
+                 ),
         tabPanel("Background",
                  # Logos at bottom of page with links
                  tags$a(href = "https://www.boisestate.edu",target = "_blank", img(src="BSU2.png", class = "logo1")), 
@@ -263,8 +286,35 @@ server = function(input, output, session) {
 
     # render leaflet map
     output$myMap <- renderLeaflet(map)
+    
+    # render leaflet map "Download Data" tab
+    output$myMap2 <- renderLeaflet({map2 %>% 
+            addMouseCoordinates() })
+    
+    ## Observe mouse clicks and get lat/lon
+    observeEvent(input$myMap2_click, {
+        click <- input$myMap2_click
+        clat <- click$lat
+        clon <- click$lng 
+        
+        leafletProxy('myMap2') %>%
+            clearMarkers() %>%
+            clearShapes() %>%
+            addCircles(lng=clon, lat=clat, group='circles',
+                       weight=1, radius=500, color='black', fillColor='green',
+                       fillOpacity=0.2, opacity=.5)
+        
+        output$clat <- renderUI(textInput("lattitude","Lattitude",clat))
+        output$clon <- renderUI(textInput("longitude","Longitude",clon))
+        
+    })
+    
     # Load initial leaflet map in background in Spatial Explorer
     outputOptions(output, "myMap", suspendWhenHidden = FALSE)
+    
+    # Load initial leaflet map in background in Download Data
+    outputOptions(output, "myMap2", suspendWhenHidden = TRUE)
+    
     # get variable name to pull from data from user selection
     v <- reactive ({ ncVarNames[match(input$varInput, varNamesLong)] })
     
@@ -380,13 +430,13 @@ output$myGraph <- renderDygraph({ dygraph(df_dy()) %>%
 df_stats <- reactive ({ 
     
     if (input$domainInput2 == "Snake River AVA") {
-        read.csv("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/AVA_30YR_NoLeap917.csv") }
+        data.table::fread("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/AVA_30YR_NoLeap917.csv") }
     else if (input$domainInput2 == "Sunnyslope") {
-        read.csv("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/SS_30YR_NoLeap917.csv") }
+        data.table::fread("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/SS_30YR_NoLeap917.csv") }
     else if (input$domainInput2 == "Domain 01") {
-        read.csv("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/d01_30YR_NoLeap917.csv") }
+        data.table::fread("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/d01_30YR_NoLeap917.csv") }
     else if (input$domainInput2 == "Domain 02") {
-        read.csv("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/d02_30YR_NoLeap917.csv") }
+        data.table::fread("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/d02_30YR_NoLeap917.csv") }
         })
 
 DTdf <-  reactive ({ df_stats() %>% group_by_(input$myGroup)  %>% na.omit() %>% summarise(Mean_Temp = mean(TMEAN),
@@ -397,8 +447,14 @@ DTdf <-  reactive ({ df_stats() %>% group_by_(input$myGroup)  %>% na.omit() %>% 
 output$myTable <- DT::renderDataTable({ DT::datatable(DTdf(),fillContainer = T,
                     options = list(pageLength = 50)) })
 
-    
+###############################################################################
+# The folling section refers to the "Download Data" tab
+
+
+
+
 ############################################################################### 
+
 # Kill the app when closed in the browser 
 session$onSessionEnded(stopApp)
 }
