@@ -1,6 +1,8 @@
 library(xts)
 library(data.table)
 library(ncdf4)
+library(grid)
+library(gridExtra)
 library(shiny)
 library(leaflet)
 library(leafem)
@@ -296,9 +298,9 @@ ui <- navbarPage("",
                     br(),
                     withBusyIndicatorUI(actionButton("button3", "View Summary Report", class = "btn-primary")),
                     br(),
-                    withBusyIndicatorUI(actionButton("button4", "Download Full Report", class = "btn-primary"))),
+                    #withBusyIndicatorUI(actionButton("button4", "Download Full Report", class = "btn-primary"))),
                     #br(),
-                    #downloadButton('downloadData', 'Download Full Report')),
+                    downloadButton('downloadData', 'Download Full Report')),
                  mainPanel(width = 7,
                             DT::dataTableOutput("siteTable", height = "90vh"))
 
@@ -526,16 +528,16 @@ observeEvent(input$button3, {
                                                             fillContainer = T,options = list(pageLength = 50)) })  
 })
 
-#output$downloadData <- downloadHandler(
-#    filename = function() {
-#        paste("data-", Sys.Date(), ".csv", sep="")
-#    },
-#    content = function(file) {
-#        write.csv(d, file)
-        #pdf(file=file, height = 27, width = 27)
-        #rid.table(d)
-        #ev.off()
-#   }
+output$downloadData <- downloadHandler(
+    filename = function() {
+        paste("data-", round(input$lattitude,2), "_", round(input$longitude,2),".pdf", sep="")},
+    content = function(file) {
+        pdf(file=file, height = 24, width = 16)
+        grid.arrange(tableGrob(as.data.frame(generate_table(site_specific_data, input$lattitude, input$longitude)[1])),
+                     tableGrob(as.data.frame(generate_table(site_specific_data, input$lattitude, input$longitude)[2])),
+                     newpage = TRUE)
+        dev.off()
+  })
 
 ############################################################################### 
 
