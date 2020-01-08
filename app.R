@@ -28,7 +28,6 @@ site_specific_data <- data.table::fread('~/Desktop/AVA_30YR_df_all_vars.csv')
 # create a list of non-leap year dates to be used for dygraphs (year will be stripped)
 dates <- seq(as.Date("1987-01-01"),as.Date("1987-12-31"), "day")
 
-
 ##### R FUNCTIONS FOR DATA DOWNLOAD ############################################
 
 distance <- function(lat_dist, lon_dist) { sqrt(lat_dist*2 + lon_dist*2)}
@@ -50,7 +49,7 @@ generate_table <- function(df, lat, lon) {
     
     coords <- get_latlon(lat, lon)
     dfs <- filter(df, XLAT == coords[1], XLONG == coords[2])
-    columns <- colnames(df_sub[1:18])
+    columns <- colnames(dfs[1:18])
     dfs <- dfs[columns]
     trends <- c()
     pvals <- c()
@@ -70,7 +69,7 @@ generate_table <- function(df, lat, lon) {
     summary_df <- cbind(summary_df, trends, pvals)
     summary_df <- rename(summary_df, "Trends [units/year]" = "trends", 'P-Value' = 'pvals')
     
-    l = list(trends, pvals, dfs[columns[1:18]], summary_df)
+    l = list(round(dfs[columns[1:18]],3), round(summary_df,3))
     
     return(l)
 }
@@ -84,7 +83,8 @@ create_plots <- function(df_sub) {
 }
 
 ##### JAVASCRIPT FUNCTIONS #########
-# Javascript to get the axis label passed as a date, this function outputs only the month of the date
+
+# get the axis label passed as a date, this function outputs only the month of the date
 getMonth <- 'function(d){
 var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun","Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 return monthNames[d.getMonth()];
@@ -283,6 +283,7 @@ ui <- navbarPage("",
                      DT::dataTableOutput("myTable", height = "90vh")
                  )),
         tabPanel("Download Data",
+                 
                  sidebarPanel(width = 5,
                     p('Testing......'),
                     uiOutput("clat"),
@@ -291,11 +292,13 @@ ui <- navbarPage("",
                     leafletOutput("myMap2", height = "50vh"),
                     br(),
                     # call custom function for creating "View/Download" buttons
-                    withBusyIndicatorUI(actionButton("button2", "View Report", class = "btn-primary")),
+                    withBusyIndicatorUI(actionButton("button2", "View Annual Report", class = "btn-primary")),
                     br(),
-                    withBusyIndicatorUI(actionButton("button3", "Download Report", class = "btn-primary"))),
+                    withBusyIndicatorUI(actionButton("button3", "View Summary Report", class = "btn-primary")),
+                    br(),
+                    withBusyIndicatorUI(actionButton("button4", "Download Full Report", class = "btn-primary"))),
                  mainPanel(width = 7,
-                            DT::dataTableOutput("customTable", height = "60vh"))
+                            DT::dataTableOutput("siteTable", height = "90vh"))
 
                  ),
         tabPanel("Background",
@@ -467,8 +470,6 @@ output$myGraph <- renderDygraph({ dygraph(df_dy()) %>%
 ###############################################################################
 # The folling section refers to the "Statistics" tab
 
-# Coming soon!
-
 df_stats <- reactive ({ 
     
     if (input$domainInput2 == "Snake River AVA") {
@@ -505,12 +506,23 @@ observeEvent(input$myMap2_click, {
                    weight=1, radius=500, color='black', fillColor='green',
                    fillOpacity=0.2, opacity=.5)
     
-    output$clat <- renderUI(textInput("lattitude","Lattitude",clat))
-    output$clon <- renderUI(textInput("longitude","Longitude",clon))
+    output$clat <- renderUI(numericInput("lattitude","Lattitude",clat))
+    output$clon <- renderUI(numericInput("longitude","Longitude",clon))
     
 })
 
+#site_data <- eventReactive(input$button2, {generate_table(site_specific_data, input$lattitude, input$longitude)})
+observeEvent(input$button2, {
+    
+    output$siteTable <- DT::renderDataTable({ DT::datatable(as.data.frame(generate_table(site_specific_data, input$lattitude, input$longitude)[1]),
+                                fillContainer = T,options = list(pageLength = 50)) })  
+})
 
+observeEvent(input$button3, {
+    
+    output$siteTable <- DT::renderDataTable({ DT::datatable(as.data.frame(generate_table(site_specific_data, input$lattitude, input$longitude)[2]),
+                                                            fillContainer = T,options = list(pageLength = 50)) })  
+})
 
 
 ############################################################################### 
