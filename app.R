@@ -32,10 +32,10 @@ dates <- seq(as.Date("1987-01-01"),as.Date("1987-12-31"), "day")
 
 distance <- function(lat_dist, lon_dist) { sqrt(lat_dist*2 + lon_dist*2)}
 
-get_latlon <- function(lat, lon) {
+get_latlon <- function(dff, lat, lon) {
     
-    lats <- df$XLAT
-    lons <- df$XLONG
+    lats <- dff$XLAT
+    lons <- dff$XLONG
     
     a <- abs(lats - lat)
     b <- abs(lons - lon)
@@ -47,7 +47,7 @@ get_latlon <- function(lat, lon) {
 
 generate_table <- function(df, lat, lon) {
     
-    coords <- get_latlon(lat, lon)
+    coords <- get_latlon(df,lat, lon)
     dfs <- filter(df, XLAT == coords[1], XLONG == coords[2])
     columns <- colnames(dfs[1:18])
     dfs <- dfs[columns]
@@ -297,6 +297,8 @@ ui <- navbarPage("",
                     withBusyIndicatorUI(actionButton("button3", "View Summary Report", class = "btn-primary")),
                     br(),
                     withBusyIndicatorUI(actionButton("button4", "Download Full Report", class = "btn-primary"))),
+                    #br(),
+                    #downloadButton('downloadData', 'Download Full Report')),
                  mainPanel(width = 7,
                             DT::dataTableOutput("siteTable", height = "90vh"))
 
@@ -524,6 +526,16 @@ observeEvent(input$button3, {
                                                             fillContainer = T,options = list(pageLength = 50)) })  
 })
 
+#output$downloadData <- downloadHandler(
+#    filename = function() {
+#        paste("data-", Sys.Date(), ".csv", sep="")
+#    },
+#    content = function(file) {
+#        write.csv(d, file)
+        #pdf(file=file, height = 27, width = 27)
+        #rid.table(d)
+        #ev.off()
+#   }
 
 ############################################################################### 
 
