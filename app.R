@@ -18,14 +18,17 @@ library(DT)
 # script to create animation for loading new map
 source("buttonIndicator.R")
 
-# set working directory
-setwd("/Users/charlesbecker/Desktop/Data/30YR_Daily/Data/AVA_d02/")
+# specify working directory
+working_dir <- '/Users/charlesbecker/Desktop/R_Projects/DOA_webapp/'
 
-# laod data for dygraphs (AVA)
-d <- data.table::fread("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/AVA_30YR_NoLeap917.csv")
+# set working directory
+setwd(working_dir)
+
+# load data for dygraphs (AVA)
+d <- data.table::fread("data/AVA_30YR_NoLeap917.csv")
 
 # load data for site specific "Download Data" tab
-site_specific_data <- data.table::fread('~/Desktop/AVA_30YR_df_all_vars.csv')
+site_specific_data <- data.table::fread('data/AVA_30YR_df_all_vars.csv')
 
 # create a list of non-leap year dates to be used for dygraphs (year will be stripped)
 dates <- seq(as.Date("1987-01-01"),as.Date("1987-12-31"), "day")
@@ -109,10 +112,10 @@ monNames = c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","
 ncFileNames <- list.files(pattern = ".nc")
 
 # initial file for default map upon loading
-init_raster <- "AVA_WY1988_yearly_stats_d02.nc"
+init_raster <- "data/AVA_WY1988_yearly_stats_d02.nc"
 
 # get AVA Shape File
-jsonFile <- "/Users/charlesbecker/Desktop/Data/Project Data/Shiny/SR_AVA_simplified_pointRemove50m.json"
+jsonFile <- "data/SR_AVA_simplified_pointRemove50m.json"
 
 # set variable names to pull from file and variable names to list on UI
 ncVarNames <- c("TMAX", "TMIN", "TMEAN", "GDD", "DPRCP", "DSNOW", "FROSTD", "FROSTH")
@@ -372,27 +375,27 @@ server = function(input, output, session) {
 
         if (input$plotInput == "Historical") {
             if (input$domainInput == "Snake River AVA (1km resolution)") { 
-                brick(paste0("./AVA_WY",input$yearInput, "_yearly_stats_d02.nc"), varname = v(),
+                brick(paste0("data/AVA_WY",input$yearInput, "_yearly_stats_d02.nc"), varname = v(),
                       crs = myCRS) }
             else if (input$domainInput == "Greater Idaho (1km resolution)") { 
-                brick(paste0("./WY",input$yearInput, "_yearly_stats_d02.nc"), varname = v(),
+                brick(paste0("data/WY",input$yearInput, "_yearly_stats_d02.nc"), varname = v(),
                       crs = myCRS) }
             else if (input$domainInput == "Greater Pacific Northwest (3km resolution)") { 
-                brick(paste0("./WY",input$yearInput, "_yearly_stats_d01.nc"), varname = v(),
+                brick(paste0("data/WY",input$yearInput, "_yearly_stats_d01.nc"), varname = v(),
                       crs = myCRS) }}
         else if (input$plotInput == "Yearly Anomaly") {
             if (input$domainInput == "Snake River AVA (1km resolution)") { 
-                brick("./AVA_Yearly_Anomalies_d02.nc", varname = v(),
+                brick("data/AVA_Yearly_Anomalies_d02.nc", varname = v(),
                       crs = myCRS) }
             else if (input$domainInput == "Greater Idaho (1km resolution)") { 
-                brick("./Yearly_Anomalies_d02.nc", varname = v(),
+                brick("data/Yearly_Anomalies_d02.nc", varname = v(),
                       crs = myCRS) }}
         else if (input$plotInput == "Monthly Anomaly") {
             if (input$domainInput == "Snake River AVA (1km resolution)") { 
-                brick(paste0("./", input$monInput, "_AVA_Anomalies_d02.nc"), varname = v(),
+                brick(paste0("data/", input$monInput, "_AVA_Anomalies_d02.nc"), varname = v(),
                       crs = myCRS) }
             else if (input$domainInput == "Greater Idaho (1km resolution)") { 
-                brick(paste0("./", input$monInput, "_Anomalies_d02.nc"), varname = v(),
+                brick(paste0("data/", input$monInput, "_Anomalies_d02.nc"), varname = v(),
                       crs = myCRS) }
         }}
         )
@@ -477,13 +480,13 @@ output$myGraph <- renderDygraph({ dygraph(df_dy()) %>%
 df_stats <- reactive ({ 
     
     if (input$domainInput2 == "Snake River AVA") {
-        data.table::fread("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/AVA_30YR_NoLeap917.csv") }
+        data.table::fread("data/AVA_30YR_NoLeap917.csv") }
     else if (input$domainInput2 == "Sunnyslope") {
-        data.table::fread("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/SS_30YR_NoLeap917.csv") }
+        data.table::fread("data/SS_30YR_NoLeap917.csv") }
     else if (input$domainInput2 == "Domain 01") {
-        data.table::fread("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/d01_30YR_NoLeap917.csv") }
+        data.table::fread("data/d01_30YR_NoLeap917.csv") }
     else if (input$domainInput2 == "Domain 02") {
-        data.table::fread("/Users/charlesbecker/Desktop/Data/Project Data/Shiny/30YR_Stats/d02_30YR_NoLeap917.csv") }
+        data.table::fread("data/d02_30YR_NoLeap917.csv") }
         })
 
 DTdf <-  reactive ({ df_stats() %>% group_by_(input$myGroup)  %>% na.omit() %>% summarise(Mean_Temp = mean(TMEAN),
