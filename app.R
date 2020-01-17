@@ -20,18 +20,8 @@ source("buttonIndicator.R")
 
 # specify working directory
 working_dir <- '/Users/charlesbecker/Desktop/R_Projects/DOA_webapp/'
-
 # set working directory
 setwd(working_dir)
-
-# load data for dygraphs (AVA)
-d <- data.table::fread("data/AVA_30YR_NoLeap917.csv")
-
-# load data for site specific "Download Data" tab
-site_specific_data <- data.table::fread('data/AVA_30YR_df_all_vars.csv')
-
-# create a list of non-leap year dates to be used for dygraphs (year will be stripped)
-dates <- seq(as.Date("1987-01-01"),as.Date("1987-12-31"), "day")
 
 ##### R FUNCTIONS FOR DATA DOWNLOAD ############################################
 
@@ -102,6 +92,24 @@ date = new Date(d);
 return monthNames[date.getMonth()] + " " +date.getUTCDate(); }'
 ####################################
 
+# load data for dygraphs (AVA)
+d <- data.table::fread("data/AVA_30YR_NoLeap917.csv")
+
+# load data for site specific "Download Data" tab
+site_specific_data <- data.table::fread('data/AVA_30YR_df_all_vars.csv')
+
+# initial file for default map upon loading
+init_raster <- "data/AVA_WY1988_yearly_stats_d02.nc"
+
+# get AVA Shape File
+jsonFile <- "data/SR_AVA_simplified_pointRemove50m.json"
+# convert JSON file to R list object (this is just an additional shape layer)
+json <- fromJSON(file = jsonFile)
+
+
+# create a list of non-leap year dates to be used for dygraphs (year will be stripped)
+dates <- seq(as.Date("1987-01-01"),as.Date("1987-12-31"), "day")
+
 # Scale type for dygrpahs
 scaleType <- c("Individual Years", "Monthly (across all years)", "All years")
 
@@ -111,19 +119,10 @@ monNames = c("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","
 # get list of netCDF files (raw data)
 ncFileNames <- list.files(pattern = ".nc")
 
-# initial file for default map upon loading
-init_raster <- "data/AVA_WY1988_yearly_stats_d02.nc"
-
-# get AVA Shape File
-jsonFile <- "data/SR_AVA_simplified_pointRemove50m.json"
-
 # set variable names to pull from file and variable names to list on UI
 ncVarNames <- c("TMAX", "TMIN", "TMEAN", "GDD", "DPRCP", "DSNOW", "FROSTD", "FROSTH")
 varNamesLong <-  c("Maximum Daily Temperature","Minimum Daily Temperature","Mean Daily Temperature", "Growing Degree Days",
                    "Total Precipitation","Snowfall", "Frost Days", "Frost Hours")
-
-# convert JSON file to R list object (this is just an additional shape layer)
-json <- fromJSON(file = jsonFile)
 
 # define CRS from netCDF file (from WRF) and Extent (from GDAL)
 myCRS <- CRS("+proj=lcc +lat_1=44.299999f +lat_2=44.99999f +lat_0=44.300003 +lon_0=-114.7 +x_0=0 +y_0=0 +units=m +datum=WGS84 +no_defs")
