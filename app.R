@@ -19,7 +19,7 @@ library(DT)
 source("buttonIndicator.R")
 
 # specify working directory
-working_dir <- '/Users/charlesbecker/Desktop/R_Projects/DOA_webapp/'
+working_dir <- '/Users/kendrakaiser/github/DOA_web_viewer/'
 # set working directory
 setwd(working_dir)
 
@@ -125,7 +125,7 @@ varNamesLong <-  c("Maximum Daily Temperature","Minimum Daily Temperature","Mean
                    "Total Precipitation","Snowfall", "Frost Days", "Frost Hours")
 
 # define CRS from netCDF file (from WRF) and Extent (from GDAL)
-myCRS <- CRS("+proj=lcc +lat_1=44.299999f +lat_2=44.99999f +lat_0=44.300003 +lon_0=-114.7 +x_0=0 +y_0=0 +units=m +datum=WGS84 +no_defs")
+myCRS <- CRS("+proj=lcc +lat_1=44.299999 +lat_2=44.99999 +lat_0=44.300003 +lon_0=-114.7 +x_0=0 +y_0=0 +units=m +datum=WGS84 +no_defs")
 myExtent <- c(-247739.5, 100260.5, -185023.9, 141976.1)
 
 # Load raster and set projection and lat/lon extent
