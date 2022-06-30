@@ -136,7 +136,7 @@ renderDownloadTab <- function(input, output, session, dat) {
       
       # create title
       gridExtra::grid.arrange(
-        gridExtra::textGrob(label = paste(paste0('Data for ',
+        grid::textGrob(label = paste(paste0('Data for ',
                                           round(as.numeric(input$latitude),4), ', ',
                                           round(as.numeric(input$longitude),4)), 
                                varstring, yearstring, 
@@ -259,18 +259,18 @@ renderDownloadTab <- function(input, output, session, dat) {
         # generate.summary.table defined in DownloadTab_helpers.R
         summary <- generate.summary.table(allvars, dat)
         # print('created allvars')
-        gridExtra::grid.arrange(top = gridExtra::textGrob(paste0('\nSummary Table for ', 
+        gridExtra::grid.arrange(top = grid::textGrob(paste0('\nSummary Table for ', 
                                                                  round(input$latitude, 4),
                                     ', ', round(input$longitude, 4), '\n',
                                     yearstring), 
                                     gp = grid::gpar(fontsize = 36)),
-                     gridExtra::textGrob('Summarized Values, Compared to Boise Airport Weather Station\n',
+                     grid::textGrob('Summarized Values, Compared to Boise Airport Weather Station\n',
                               gp = grid::gpar(fontsize = 24, fontface = 'bold')),
                      # this table is the summary values, and the difference between
                      # the values for the selected location and the airport weather station
                      gridExtra::tableGrob(summary$combined,
                                theme = gridExtra::ttheme_default(18)) ,
-                     gridExtra::textGrob(paste('\n\n\n\n', 
+                     grid::textGrob(paste('\n\n\n\n', 
                                     strwrap('Values in parentheses 
                                             show the difference between the selected 
                                             location and the Boise Airport Weather 
@@ -279,23 +279,34 @@ renderDownloadTab <- function(input, output, session, dat) {
                                             for the Boise Airport from the values for 
                                             the location you selected. For example, (-2) 
                                             in a temperature variable row means that your 
-                                            location is 2 degrees colder than the Boise 
-                                            Airport.',
+                                            location is 2 degrees colder than the Boise Airport.
+                                            TMAX = Maximum Temp, TMEAN = Mean Temp,
+                                            TMIN = Minimum Temp, DPRCP = Precipitation,
+                                            PRCP Days = Days with Precip,
+                                            DSNOW = Snowfall (in Snow Water Equivalent),
+                                            FROSTH = Frost Hours, FROSTD = Days with Frost,
+                                            GDD = Growing Degree Days',
                                       width = 190) %>% paste(collapse = '\n')
                                     ), # paste
                               gp = grid::gpar(fontsize = 18,
                                         fontface = 'italic',
                                         col = '#565656')),
-                     gridExtra::textGrob('Variance of Values\n',
+                     grid::textGrob('Variance of Values\n',
                               gp = grid::gpar(fontsize = 24, fontface = 'bold')),
                      # table showing standard deviations
                      gridExtra::tableGrob(summary$sdtable,
                                theme = gridExtra::ttheme_default(18)),
-                     gridExtra::textGrob(paste('\n\n',
+                     grid::textGrob(paste('\n\n\n',
                                     strwrap('The values shown are the mean for that 
                                       variable +/- the standard deviation, which 
                                       is a common metric for measuring the variability 
-                                      in a set of data.',
+                                      in a set of data.
+                                      TMAX = Maximum Temp, TMEAN = Mean Temp,
+                                      TMIN = Minimum Temp, DPRCP = Precipitation,
+                                      PRCP Days = Days with Precip,
+                                      DSNOW = Snowfall (in Snow Water Equivalent),
+                                      FROSTH = Frost Hours, FROSTD = Days with Frost,
+                                      GDD = Growing Degree Days',
                                       width = 190) %>% paste(collapse = '\n')
                                     ), # paste
                               gp = grid::gpar(fontsize = 18,
@@ -355,7 +366,7 @@ renderDownloadTab <- function(input, output, session, dat) {
       pdf(file = file, height = 24, width = 16, onefile = T)
       # print('created pdf')
       gridExtra::grid.arrange(
-        gridExtra::textGrob(label = paste(paste0('Data for ',
+        grid::textGrob(label = paste(paste0('Data for ',
                                       round(as.numeric(input$latitude),4), ', ',
                                       round(as.numeric(input$longitude),4)), 
                                varstring, yearstring, 
@@ -399,6 +410,7 @@ renderDownloadTab <- function(input, output, session, dat) {
           df <- allvars[3:8][[i]] %>%
             dplyr::filter(year %in% input$downloadyears)
           if (input$figuretype == 'xmonth') {
+              print('plotting data')
             plots[[i]] <- plot.data.xmonth(var = var, df = df, ylab = varname,
                                            yeartype = ifelse((var %in% dat$calendarvars & 
                                                                 input$yeartype == 'calendar'), 
@@ -406,24 +418,29 @@ renderDownloadTab <- function(input, output, session, dat) {
                                            tmaxdf = allvars[[1]], tmindf = allvars[[2]],
                                            caption = dat$captiontext[which(names(dat$captiontext) == var)]
             )
-            
+            print('finished plotting')
           } else {
+              print('in else')
             plots[[i]] <- plot.data.xyear(var = var, df = df, ylab = varname,
                                           months = input$downloadmonths)
           }
         }
+        print('printing plots')
+        marrangeGrob(grobs = plots, nrow = 3, ncol = 1) %>% print()
+        print('printing summary table')
         
-        gridExtra::marrangeGrob(grobs = plots, nrow = 3, ncol = 1) %>% print()
-    
-        gridExtra::grid.arrange(top = gridExtra::textGrob(paste0('\n\nSummary Table for ', round(input$latitude, 4),
+        # generate.summary.table defined in DownloadTab_helpers.R
+        summary <- generate.summary.table(allvars, dat)
+        
+        grid.arrange(top = textGrob(paste0('\n\nSummary Table for ', round(input$latitude, 4),
                                            ', ', round(input$longitude, 4), '\n',
                                            yearstring), 
-                                    gp = grid::gpar(fontsize = 36)),
-                     gridExtra::textGrob('Summarized Values, Compared to Boise Airport Weather Station\n',
-                              gp = grid::gpar(fontsize = 24, fontface = 'bold')),
-                     gridExtra::tableGrob(summary$combined,
-                               theme = gridExtra::ttheme_default(15)) ,
-                     gridExtra::textGrob(paste('', 
+                                    gp = gpar(fontsize = 36)),
+                     textGrob('Summarized Values, Compared to Boise Airport Weather Station\n',
+                              gp = gpar(fontsize = 24, fontface = 'bold')),
+                     tableGrob(summary$combined,
+                               theme = ttheme_default(12)) ,
+                     textGrob(paste('', 
                                     strwrap('Values in parentheses 
                                             show the difference between the selected 
                                             location and the Boise Airport Weather 
@@ -433,22 +450,34 @@ renderDownloadTab <- function(input, output, session, dat) {
                                             the location you selected. For example, (-2) 
                                             in a temperature variable row means that your 
                                             location is 2 degrees colder than the Boise 
-                                            Airport.',
-                                            width = 130) %>% paste(collapse = '\n')
+                                            Airport.
+                                            TMAX = Maximum Temp, TMEAN = Mean Temp,
+                                            TMIN = Minimum Temp, DPRCP = Precipitation,
+                                            PRCP Days = Days with Precip,
+                                            DSNOW = Snowfall (in Snow Water Equivalent),
+                                            FROSTH = Frost Hours, FROSTD = Days with Frost,
+                                            GDD = Growing Degree Days',
+                                            width = 120) %>% paste(collapse = '\n')
                      ), # paste
-                     gp = grid::gpar(fontsize = 18,
+                     gp = gpar(fontsize = 18,
                                fontface = 'italic',
                                col = '#565656')),
-                     gridExtra::textGrob('Variance of Values\n',
-                              gp = grid::gpar(fontsize = 24, fontface = 'bold')),
-                     gridExtra::tableGrob(summary$sdtable,
-                               theme = gridExtra::ttheme_default(12)),
-                     gridExtra::textGrob(strwrap('The values shown are the mean for that 
+                     textGrob('Variance of Values\n',
+                              gp = gpar(fontsize = 24, fontface = 'bold')),
+                     tableGrob(summary$sdtable,
+                               theme = ttheme_default(12)),
+                     textGrob(strwrap('The values shown are the mean for that 
                                       variable +/- the standard deviation, which 
                                       is a common metric for measuring the variability 
-                                      in a set of data.',
-                                      width = 140) %>% paste(collapse = '\n'),
-                     gp = grid::gpar(fontsize = 18,
+                                      in a set of data.
+                                      TMAX = Maximum Temp, TMEAN = Mean Temp,
+                                      TMIN = Minimum Temp, DPRCP = Precipitation,
+                                      PRCP Days = Days with Precip,
+                                      DSNOW = Snowfall (in Snow Water Equivalent),
+                                      FROSTH = Frost Hours, FROSTD = Days with Frost,
+                                      GDD = Growing Degree Days',
+                                      width = 120) %>% paste(collapse = '\n'),
+                     gp = gpar(fontsize = 18,
                                fontface = 'italic',
                                col = '#565656')),
                      ncol = 1)
@@ -456,7 +485,10 @@ renderDownloadTab <- function(input, output, session, dat) {
       })
       
       dev.off()
+      
+      pdftools::pdf_info(file)
       shinybusy::remove_modal_spinner()
     }
   )
 }
+

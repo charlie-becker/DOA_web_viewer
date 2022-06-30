@@ -39,7 +39,7 @@ dependencies <- c('shiny', 'xts', 'data.table', 'leaflet', 'ncdf4', 'grid', 'rgd
                   'gridExtra', 'leafem', 'raster', 'rjson', 'sp', 'sf', 'shinyWidgets', 
                   'dplyr', 'htmlwidgets', 'dygraphs', 'DT', 'shinyjs', 'epitools',
                   'ggplot2', 'ggrepel', 'lubridate', 'shinybusy', 'shinyalert',
-                  'magrittr', 'tidyr', 'purrr', 'gtable')
+                  'magrittr', 'tidyr', 'purrr', 'gtable', 'staplr')
 
 instaload(dependencies)
 
