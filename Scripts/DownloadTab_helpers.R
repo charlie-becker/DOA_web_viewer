@@ -218,6 +218,7 @@ plot.data.xmonth <- function(var = 'TMAX', df, ylab = var, yeartype = 'hydro',
   # if TMAX, add the min and max as confidence interval
   if (var %in% tempvars) {
     # geom_ribbon adds that interval to the plot
+    print('var in tempvars')
     plot + geom_ribbon(data = df2 %>%
                          group_by(label) %>%
                          # This part is required so it does the min/max for each
@@ -230,6 +231,7 @@ plot.data.xmonth <- function(var = 'TMAX', df, ylab = var, yeartype = 'hydro',
     # Add the lines; geom_smooth makes it less busy
     geom_smooth(size = .75, se = FALSE)
   } else {
+     print('var not in tempvars')
     # if not TMAX, add the line without any smoothing because the lines are a lot 
     # less busy
     plot + geom_line(size = .75)#, aes(linetype = df2$label2, color = df2$label))
@@ -252,17 +254,20 @@ plot.data.xyear <- function(var = 'TMAX', df = df, ylab = var,
   tempvars <- c('TMIN', 'TMAX', 'TMEAN')
   cumvars <- c('GDD', 'DPRCP', 'DSNOW', 'FROSTD', 'FROSTH')
   
+  # get rid of really low values, for some reason there are some that are -273 C
   if (var %in% tempvars) {
     df2 <- df %>%
       filter(value > -100)  %>%
       group_by(month, year) %>%
+      # take the mean across a given month
       summarize(summval = mean(value)) 
     
   } else if (var %in% cumvars) {
     df2 <- df %>%
       group_by(month, year) %>%
+      # cumulative values, then take the mean of those
       mutate(cumval = cumsum(value)) %>%
-      summarize(summval = max(cumval))
+      summarize(summval = mean(cumval))
   }
   
   df2$month <- factor(df2$month, levels = month.name)
@@ -290,7 +295,10 @@ plot.data.xyear <- function(var = 'TMAX', df = df, ylab = var,
     # scale_x_continuous(breaks = df$year)
     ylab(ylab) + 
     xlab('Year') +
-    ggtitle(ylab) +
+    # title is same as ylabel
+    labs(title = ylab,
+    # add caption, this is pulled from dat$captiontext in Load_Data.R
+    caption = captiontext) + 
     theme(plot.title = element_text(size = 36, face = 'bold', hjust = .5),
           axis.title = element_text(size = 24, face = 'bold'),
           axis.text = element_text(size = 20, face = 'bold'),
@@ -467,14 +475,9 @@ generate.summary.table <- function(allvars, dat) {
   colnames(sdtable) <- c('TMAX', 'Avg High', 'TMEAN', 'TMIN', 'Avg Low', 'DPRCP', 'PRCP Days',
                           'DSNOW', 'Snow Days', 'FROSTH/Day', 'FROSTH', 'FROSTD', 'GDD')
   
-  # I forget what this was for
+  # since the numbers are all in text format at this point, this rounds them to 2 decimal points
   sdtable <- gsub('(\\d+\\.\\d{2})\\d+', '\\1', sdtable)
   
-  # rownames(combined) <- c('Max Temp', 'Avg High', 'Daily Mean', 'Minimum Temp', 
-  #                         'Avg Low', 'Mean Daily Precip (mm)', 'Precip Days',
-  #                         'Mean Daily Snow (cm)', 'Snow Days', 'Frost Hours Per Day',
-  #                         'Total Frost Hours', 'Frost Days', 'Growing Degree Days')
-  # print('assigned row/colnames')
   return(list(combined = combined, sdtable = sdtable))
 }
 

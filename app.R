@@ -34,7 +34,7 @@ ui <- navbarPage('',
                               about the project and dataset."),
                    br(), div(class = "intro-divider4"), br(),
                    p(class="fp_note","PLEASE NOTE: This app may time-out if left idle too long, which will cause the screen to grey-out. To use the app again, 
-                              refresh the page. This will reset all previously-selected input options.")),
+                              refresh the page. This will reset all previously-selected input options."))
           ), # tabPanel
  ## 1.2 EXPLORER TAB ----
  tabPanel('Explorer',
@@ -129,13 +129,10 @@ ui <- navbarPage('',
                                options = list('max-options' = 5)),
                    # Render choices server side
                    selectInput('varInput1', 'Variable',
-                               choices = NULL),
+                               choices = NULL)
                                # choices = varNamesLong, 
                                # selected = varNamesLong[3]), 
-                   radioButtons('unitInput', 'Unit Type',
-                                choices = c('Fahrenheit/Inches', 'Celcius/mm'),
-                                selected = 'Fahrenheit/Inches')
-                  ),
+                   ), # sidebarPanel
       mainPanel(
         # Dygraph (interactive time series graph)
         dygraphOutput('myGraph', width = '100%', height = '70vh')
@@ -174,6 +171,8 @@ ui <- navbarPage('',
  tabPanel('Download Data',
     sidebarLayout(
       sidebarPanel(width = 5,
+                   strong('Download Data', style = 'font-size:2.5vh'),
+                   br(), br(),
                    # p('Testing....'),
                    # Render leaflet map
                    leafletOutput(outputId = 'myMap2', height = '50vh'),
@@ -223,9 +222,10 @@ ui <- navbarPage('',
                    )
                   ), # sidebarPanel
       mainPanel(width = 7, 
-                h1(HTML('<b><font face = "Helvetica">What Are you Downloading?</font></b>')),
+                HTML('<b><font face = "Helvetica" size = 6>What Am I Downloading?</font></b>'),
+                hr(),
                 tabsetPanel(
-                  # type = 'pill',
+                  type = 'pill',
                   tabPanel(h3(strong('Summary Table')),
                            h4(strong('This produces 2 tables summarizing the climate record 
                               for your selected location and years.')),
